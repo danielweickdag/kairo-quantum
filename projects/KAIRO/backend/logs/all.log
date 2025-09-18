@@ -1,0 +1,227 @@
+2025-09-16 20:38:30:3830 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:38:30:3830 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:39:36:3936 [31merror[39m: [31m[39m
+[31mInvalid `prisma.user.findUnique()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/routes/auth.ts:132:34[39m
+
+[31m  129 const { email, password } = req.body;[39m
+[31m  130 [39m
+[31m  131 // Find user[39m
+[31m→ 132 const user = await prisma.user.findUnique([39m
+[31mUser `username` was denied access on the database `kairo_db.public`[39m
+2025-09-16 20:43:43:4343 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:43:43:4343 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:44:02:442 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:44:02:442 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:44:23:4423 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:44:23:4423 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:44:33:4433 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:44:33:4433 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:44:45:4445 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:44:45:4445 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:45:04:454 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:45:04:454 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:45:16:4516 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:45:16:4516 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:46:47:4647 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:46:47:4647 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:46:57:4657 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:46:57:4657 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:47:18:4718 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:47:18:4718 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:47:32:4732 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:47:32:4732 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:47:43:4743 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:47:43:4743 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:47:59:4759 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:47:59:4759 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:48:10:4810 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:48:10:4810 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:48:22:4822 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:48:22:4822 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:48:35:4835 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:48:35:4835 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:49:33:4933 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:49:33:4933 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:49:56:4956 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:49:56:4956 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:50:22:5022 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:50:22:5022 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:51:00:510 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:51:00:510 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:51:17:5117 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:51:17:5117 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:51:30:5130 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:51:30:5130 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:51:55:5155 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:51:55:5155 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:52:06:526 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:52:06:526 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:52:22:5222 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:52:22:5222 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:52:42:5242 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:52:42:5242 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:56:53:5653 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:56:53:5653 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:57:05:575 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:57:05:575 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:57:15:5715 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:57:15:5715 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:57:30:5730 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:57:30:5730 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:57:41:5741 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:57:41:5741 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 20:58:53:5853 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 20:58:53:5853 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:00:34:034 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:00:34:034 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:01:53:153 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:01:53:153 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:02:03:23 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:02:03:23 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:02:20:220 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:02:20:220 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:02:29:229 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:02:29:229 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-16 21:02:41:241 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-16 21:02:41:241 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:07:38:738 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:07:38:738 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:07:48:748 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:07:48:748 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:37:46:3746 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:37:46:3746 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:37:55:3755 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:37:55:3755 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:44:00:440 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:44:00:440 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:44:39:4439 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:44:39:4439 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:45:37:4537 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:45:37:4537 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:45:44:4544 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:45:44:4544 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:45:50:4550 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:45:50:4550 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:46:01:461 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:46:01:461 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:46:07:467 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:46:07:467 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:50:10:5010 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:50:10:5010 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:50:28:5028 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:50:28:5028 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:50:34:5034 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:50:34:5034 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:50:52:5052 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:50:52:5052 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:51:29:5129 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:51:29:5129 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:52:19:5219 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:52:19:5219 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:52:36:5236 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:52:36:5236 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:52:44:5244 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:52:44:5244 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:52:53:5253 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:52:53:5253 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:55:29:5529 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:55:29:5529 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:55:46:5546 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:55:46:5546 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:56:02:562 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:56:02:562 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:58:49:5849 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:58:49:5849 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:59:34:5934 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:59:34:5934 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:59:43:5943 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:59:43:5943 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 08:59:55:5955 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 08:59:55:5955 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:00:07:07 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:00:07:07 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:00:36:036 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:00:36:036 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:01:44:144 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:01:44:144 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:01:58:158 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:01:58:158 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:02:27:227 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:02:27:227 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:02:38:238 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:02:38:238 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:22:15:2215 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:22:15:2215 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:22:56:2256 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:22:56:2256 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:24:09:249 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:24:09:249 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:00:250 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:00:250 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:09:259 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:09:259 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:20:2520 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:20:2520 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:29:2529 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:29:2529 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:38:2538 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:38:2538 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:25:43:2543 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:25:44:2544 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:26:54:2654 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:26:54:2654 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:29:05:295 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:29:05:295 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 09:30:10:3010 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 09:30:10:3010 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:28:16:2816 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:28:16:2816 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:29:34:2934 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:29:34:2934 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:29:46:2946 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:29:46:2946 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:29:56:2956 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:29:56:2956 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:30:09:309 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:30:09:309 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:31:58:3158 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:31:58:3158 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:32:12:3212 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:32:12:3212 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:32:25:3225 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:32:25:3225 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:32:38:3238 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:32:38:3238 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:32:55:3255 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:32:55:3255 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:33:09:339 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:33:09:339 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:33:34:3334 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:33:34:3334 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:33:45:3345 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:33:45:3345 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:34:07:347 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:34:07:347 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:34:20:3420 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:34:20:3420 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:34:43:3443 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:34:43:3443 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:34:57:3457 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:34:57:3457 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:35:03:353 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:35:03:353 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:35:10:3510 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:35:10:3510 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:39:06:396 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:39:06:396 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:39:21:3921 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:39:21:3921 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:39:44:3944 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:39:44:3944 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:40:39:4039 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:40:39:4039 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:41:09:419 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:41:09:419 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-17 12:41:54:4154 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-17 12:41:54:4154 [32minfo[39m: [32m📊 Environment: development[39m

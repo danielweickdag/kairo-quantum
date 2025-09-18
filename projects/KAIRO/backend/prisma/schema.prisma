@@ -1,0 +1,353 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  username          String   @unique
+  firstName         String?
+  lastName          String?
+  avatar            String?
+  bio               String?
+  isVerified        Boolean  @default(false)
+  isPublic          Boolean  @default(true)
+  accountType       AccountType @default(INDIVIDUAL)
+  riskTolerance     RiskLevel @default(MEDIUM)
+  totalBalance      Float    @default(0)
+  availableBalance  Float    @default(0)
+  passwordHash      String
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  portfolios        Portfolio[]
+  trades            Trade[]
+  botTrades         BotTrade[]
+  aiBotConfigs      AIBotConfig[]
+  followers         Follow[] @relation("UserFollowers")
+  following         Follow[] @relation("UserFollowing")
+  copyTrades        CopyTrade[] @relation("CopyTradeFollower")
+  copiedTrades      CopyTrade[] @relation("CopyTradeLeader")
+  notifications     Notification[]
+  watchlists        Watchlist[]
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+
+  @@map("users")
+}
+
+model Portfolio {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  isPublic        Boolean  @default(true)
+  allowCopyTrading Boolean @default(false)
+  totalValue      Float    @default(0)
+  totalReturn     Float    @default(0)
+  totalReturnPct  Float    @default(0)
+  dayReturn       Float    @default(0)
+  dayReturnPct    Float    @default(0)
+  riskScore       Float    @default(0)
+  sharpeRatio     Float    @default(0)
+  maxDrawdown     Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  holdings        Holding[]
+  trades          Trade[]
+  copyTrades      CopyTrade[]
+  performance     PortfolioPerformance[]
+  aiBotConfigs    AIBotConfig[]
+
+  @@map("portfolios")
+}
+
+model Holding {
+  id              String   @id @default(cuid())
+  symbol          String
+  quantity        Float
+  averagePrice    Float
+  currentPrice    Float
+  marketValue     Float
+  unrealizedPnL   Float
+  unrealizedPnLPct Float
+  weight          Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  portfolioId     String
+  portfolio       Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, symbol])
+  @@map("holdings")
+}
+
+model Trade {
+  id              String    @id @default(cuid())
+  symbol          String
+  side            TradeSide
+  quantity        Float
+  price           Float
+  totalValue      Float
+  fees            Float     @default(0)
+  status          TradeStatus @default(PENDING)
+  orderType       OrderType @default(MARKET)
+  stopLoss        Float?
+  takeProfit      Float?
+  executedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolioId     String?
+  portfolio       Portfolio? @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  copyTrades      CopyTrade[]
+
+  @@map("trades")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  followerId  String
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model CopyTrade {
+  id              String    @id @default(cuid())
+  allocation      Float     // Percentage of portfolio to allocate
+  isActive        Boolean   @default(true)
+  totalCopied     Float     @default(0)
+  totalReturn     Float     @default(0)
+  totalReturnPct  Float     @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  followerId      String
+  follower        User      @relation("CopyTradeFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  leaderId        String
+  leader          User      @relation("CopyTradeLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  portfolioId     String
+  portfolio       Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  tradeId         String?
+  trade           Trade?    @relation(fields: [tradeId], references: [id])
+
+  @@unique([followerId, leaderId, portfolioId])
+  @@map("copy_trades")
+}
+
+model Watchlist {
+  id          String   @id @default(cuid())
+  name        String
+  symbols     String[] // Array of stock symbols
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("watchlists")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  content     String
+  imageUrl    String?
+  isPublic    Boolean  @default(true)
+  likesCount  Int      @default(0)
+  commentsCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  comments    Comment[]
+  likes       Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean          @default(false)
+  data        Json?            // Additional data for the notification
+  createdAt   DateTime         @default(now())
+
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model PortfolioPerformance {
+  id              String   @id @default(cuid())
+  date            DateTime
+  totalValue      Float
+  totalReturn     Float
+  totalReturnPct  Float
+  dayReturn       Float
+  dayReturnPct    Float
+  createdAt       DateTime @default(now())
+
+  portfolioId     String
+  portfolio       Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, date])
+  @@map("portfolio_performance")
+}
+
+model BotTrade {
+  id              String      @id @default(cuid())
+  symbol          String
+  side            TradeSide
+  quantity        Float
+  price           Float
+  executedPrice   Float?
+  status          TradeStatus @default(PENDING)
+  confidence      Float       // AI confidence score
+  reasoning       String?
+  stopLoss        Float?
+  takeProfit      Float?
+  pnl             Float?      // Profit/Loss
+  fees            Float       @default(0)
+  executedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  botConfigId     String
+  botConfig       AIBotConfig @relation(fields: [botConfigId], references: [id], onDelete: Cascade)
+
+  @@map("bot_trades")
+}
+
+// Enums
+enum AccountType {
+  INDIVIDUAL
+  HEDGE_FUND
+  CELEBRITY
+  INFLUENCER
+  INSTITUTIONAL
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  PENDING
+  EXECUTED
+  CANCELLED
+  FAILED
+}
+
+enum OrderType {
+  MARKET
+  LIMIT
+  STOP
+  STOP_LIMIT
+}
+
+enum NotificationType {
+  TRADE_EXECUTED
+  COPY_TRADE_EXECUTED
+  NEW_FOLLOWER
+  PORTFOLIO_UPDATE
+  MARKET_ALERT
+  SYSTEM_NOTIFICATION
+  AI_BOT_STARTED
+  AI_BOT_STOPPED
+  AI_BOT_TRADE_EXECUTED
+}
+
+model AIBotConfig {
+  id                    String    @id @default(cuid())
+  botId                 String    @unique
+  name                  String
+  enabled               Boolean   @default(true)
+  isActive              Boolean   @default(false)
+  riskLevel             RiskLevel @default(MEDIUM)
+  maxPositionSize       Float     @default(10)
+  minConfidence         Float     @default(0.7)
+  tradingPairs          String[]  // Array of trading symbols
+  stopLossPercentage    Float     @default(2)
+  takeProfitRatio       Float     @default(2)
+  maxDailyTrades        Int       @default(10)
+  maxDailyLoss          Float     @default(5)
+  riskPerTrade          Float     @default(1)
+  targetProfitability   Float     @default(90)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolioId           String
+  portfolio             Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  botTrades             BotTrade[]
+
+  @@map("ai_bot_configs")
+}

@@ -1,0 +1,9 @@
+2025-09-16 20:39:36:3936 [31merror[39m: [31m[39m
+[31mInvalid `prisma.user.findUnique()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/routes/auth.ts:132:34[39m
+
+[31m  129 const { email, password } = req.body;[39m
+[31m  130 [39m
+[31m  131 // Find user[39m
+[31m→ 132 const user = await prisma.user.findUnique([39m
+[31mUser `username` was denied access on the database `kairo_db.public`[39m
