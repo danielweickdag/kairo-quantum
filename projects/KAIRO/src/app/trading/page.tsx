@@ -29,6 +29,8 @@ import {
 import Link from 'next/link';
 import { tradingService, CreateTradeRequest } from '@/services/tradingService';
 import { toast } from 'react-hot-toast';
+import BrokerAccountSelector from '@/components/BrokerAccountSelector';
+import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
 
 interface MarketData {
   symbol: string;
@@ -62,6 +64,7 @@ interface Trade {
 
 export default function TradingPage() {
   const { user } = useAuth();
+  const { selectedAccount: selectedBrokerAccount, setSelectedAccount: setSelectedBrokerAccount } = useBrokerAccount();
   const [activeTab, setActiveTab] = useState<'market' | 'watchlist' | 'orders' | 'chart'>('market');
   const [selectedAsset, setSelectedAsset] = useState<string>('AAPL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -234,18 +237,21 @@ export default function TradingPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!selectedAsset || !orderQuantity || !portfolioId) {
-      toast.error('Please fill in all required fields');
+    if (!selectedAsset || !orderQuantity || !portfolioId || !selectedBrokerAccount) {
+      toast.error('Please fill in all required fields including broker account');
       return;
     }
 
     const tradeData: CreateTradeRequest = {
       portfolioId,
       symbol: selectedAsset,
+      marketType: 'STOCKS', // Default to stocks, can be enhanced to detect market type
       side: orderSide.toUpperCase() as 'BUY' | 'SELL',
       quantity: parseFloat(orderQuantity),
       price: orderType === 'market' ? 0 : parseFloat(orderPrice || '0'),
-      orderType: orderType.toUpperCase() as 'MARKET' | 'LIMIT'
+      orderType: orderType.toUpperCase() as 'MARKET' | 'LIMIT',
+      brokerAccountId: selectedBrokerAccount?.id,
+      brokerConnectionId: selectedBrokerAccount?.brokerConnection?.id
     };
 
     // Validate trade data
@@ -607,6 +613,18 @@ export default function TradingPage() {
                       </button>
                     </div>
 
+                    {/* Broker Account */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Broker Account
+                      </label>
+                      <BrokerAccountSelector
+                        selectedAccount={selectedBrokerAccount}
+                        onAccountSelect={setSelectedBrokerAccount}
+                        placeholder="Select a broker account for trading"
+                      />
+                    </div>
+
                     {/* Portfolio */}
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -670,7 +688,7 @@ export default function TradingPage() {
                     {/* Place Order Button */}
                     <button
                       onClick={handlePlaceOrder}
-                      disabled={!orderQuantity || !portfolioId || (orderType !== 'market' && !orderPrice) || isPlacingOrder}
+                      disabled={!orderQuantity || !portfolioId || !selectedBrokerAccount || (orderType !== 'market' && !orderPrice) || isPlacingOrder}
                       className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                         orderSide === 'buy'
                           ? 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white'

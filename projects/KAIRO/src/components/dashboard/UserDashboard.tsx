@@ -65,7 +65,7 @@ import {
   Wifi,
   Signal
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency as utilsFormatCurrency, formatPercent as utilsFormatPercent } from '@/lib/utils'
 
 interface PortfolioData {
   totalValue: number
@@ -235,11 +235,16 @@ const UserDashboard: React.FC = () => {
   })
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount)
+    if (typeof amount !== 'number' || isNaN(amount)) return '$0.00'
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(amount)
+    } catch (error) {
+      return '$0.00'
+    }
   }
 
   const formatPercent = (percent: number) => {
@@ -247,10 +252,22 @@ const UserDashboard: React.FC = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    if (!dateString) return 'N/A'
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (error) {
+      return 'Invalid Date'
+    }
+  }
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 

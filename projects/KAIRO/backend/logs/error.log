@@ -7,3 +7,63 @@
 [31m  131 // Find user[39m
 [31m→ 132 const user = await prisma.user.findUnique([39m
 [31mUser `username` was denied access on the database `kairo_db.public`[39m
+2025-09-18 16:58:34:5834 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:58:34:5834 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:14:5914 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:14:5914 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:41:5941 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:41:5941 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 17:01:24:124 [31merror[39m: [31mError starting broker monitoring: activeConnections is not defined[39m
+2025-09-18 17:01:24:124 [31merror[39m: [31mFailed to start broker monitoring service: activeConnections is not defined[39m
+2025-09-18 17:01:43:143 [31merror[39m: [31mError starting broker monitoring: Cannot read properties of undefined (reading 'findMany')[39m
+2025-09-18 17:01:43:143 [31merror[39m: [31mFailed to start broker monitoring service: Cannot read properties of undefined (reading 'findMany')[39m
+2025-09-18 17:08:07:87 [31merror[39m: [31mNot Found - /api/ai-bot[39m
+2025-09-18 17:08:21:821 [31merror[39m: [31mNot Found - /api/ai-bot/bots[39m

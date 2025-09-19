@@ -225,3 +225,145 @@
 2025-09-17 12:41:09:419 [32minfo[39m: [32m📊 Environment: development[39m
 2025-09-17 12:41:54:4154 [32minfo[39m: [32m🚀 Server running on port 3001[39m
 2025-09-17 12:41:54:4154 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:48:25:4825 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:48:25:4825 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:49:49:4949 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:49:49:4949 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:50:19:5019 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:50:19:5019 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:51:06:516 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:51:06:516 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:51:18:5118 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:51:18:5118 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:51:29:5129 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:51:29:5129 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:51:43:5143 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:51:43:5143 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:52:24:5224 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:52:24:5224 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:53:32:5332 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:53:32:5332 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:53:56:5356 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:53:56:5356 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:54:13:5413 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:54:13:5413 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:57:07:577 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:57:07:577 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:57:40:5740 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:57:40:5740 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:58:03:583 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:58:03:583 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:58:20:5820 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:58:20:5820 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:58:34:5834 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:58:34:5834 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:58:34:5834 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:58:34:5834 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:13:5913 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:59:13:5913 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:59:14:5914 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:14:5914 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:41:5941 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 16:59:41:5941 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 16:59:41:5941 [31merror[39m: [31mError starting broker monitoring: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 16:59:41:5941 [31merror[39m: [31mFailed to start broker monitoring service: [39m
+[31mInvalid `this.prisma.brokerConnection.findMany()` invocation in[39m
+[31m/Users/blvckdlphn/projects/KAIRO/backend/src/services/BrokerMonitoringService.ts:46:68[39m
+
+[31m  43  */[39m
+[31m  44 async startMonitoring(): Promise<void> {[39m
+[31m  45   try {[39m
+[31m→ 46     const activeConnections = await this.prisma.brokerConnection.findMany([39m
+[31mThe table `public.broker_connections` does not exist in the current database.[39m
+2025-09-18 17:01:24:124 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:01:24:124 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:01:24:124 [31merror[39m: [31mError starting broker monitoring: activeConnections is not defined[39m
+2025-09-18 17:01:24:124 [31merror[39m: [31mFailed to start broker monitoring service: activeConnections is not defined[39m
+2025-09-18 17:01:43:143 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:01:43:143 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:01:43:143 [31merror[39m: [31mError starting broker monitoring: Cannot read properties of undefined (reading 'findMany')[39m
+2025-09-18 17:01:43:143 [31merror[39m: [31mFailed to start broker monitoring service: Cannot read properties of undefined (reading 'findMany')[39m
+2025-09-18 17:01:57:157 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:01:57:157 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:01:57:157 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:01:57:157 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-18 17:02:16:216 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:02:16:216 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:02:16:216 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:02:16:216 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-18 17:02:24:224 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:02:24:224 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:02:24:224 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:02:24:224 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-18 17:03:16:316 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:03:16:316 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:03:16:316 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:03:16:316 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-18 17:06:34:634 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:06:34:634 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:06:35:635 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:06:35:635 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-18 17:08:07:87 [31merror[39m: [31mNot Found - /api/ai-bot[39m
+2025-09-18 17:08:21:821 [31merror[39m: [31mNot Found - /api/ai-bot/bots[39m
+2025-09-18 17:13:04:134 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-18 17:13:04:134 [32minfo[39m: [32mProcess terminated[39m
+2025-09-18 17:13:07:137 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-18 17:13:07:137 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-18 17:13:07:137 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-18 17:13:07:137 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-19 16:50:22:5022 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-19 16:50:22:5022 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-19 16:50:24:5024 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-19 16:50:24:5024 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-19 16:50:40:5040 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-19 16:50:40:5040 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-19 16:50:40:5040 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-19 16:50:40:5040 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-19 16:51:11:5111 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-19 16:51:11:5111 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-19 16:51:11:5111 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-19 16:51:11:5111 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-19 16:51:17:5117 [32minfo[39m: [32m🚀 Server running on port 3001[39m
+2025-09-19 16:51:17:5117 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-19 16:51:17:5117 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-19 16:51:17:5117 [32minfo[39m: [32m📡 Broker monitoring service started[39m

@@ -20,6 +20,9 @@ import copyTradeRoutes from './routes/copyTrade';
 import aiBotRoutes from './routes/aiBot';
 import backtestingRoutes from './routes/backtesting';
 import liveTradingRoutes from './routes/liveTrading';
+import brokerRoutes from './routes/brokers';
+import monitoringRoutes from './routes/monitoring';
+import { getBrokerMonitoringService } from './services/BrokerMonitoringService';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -85,6 +88,8 @@ app.use('/api/copy-trade', authenticateToken, copyTradeRoutes);
 app.use('/api/ai-bot', aiBotRoutes);
 app.use('/api/backtesting', backtestingRoutes);
 app.use('/api/live-trading', authenticateToken, liveTradingRoutes);
+app.use('/api/brokers', brokerRoutes);
+app.use('/api/monitoring', monitoringRoutes);
 
 // Error handling middleware
 app.use(notFound);
@@ -96,9 +101,18 @@ initializeWebSocket(io);
 // Start server
 const PORT = process.env['PORT'] || 3001;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env['NODE_ENV'] || 'development'}`);
+  
+  // Initialize broker monitoring service
+  try {
+    const monitoringService = getBrokerMonitoringService(prisma);
+    await monitoringService.startMonitoring();
+    logger.info(`📡 Broker monitoring service started`);
+  } catch (error) {
+    logger.error('Failed to start broker monitoring service:', error);
+  }
 });
 
 // Graceful shutdown

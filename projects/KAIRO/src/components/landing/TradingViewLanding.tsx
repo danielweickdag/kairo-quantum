@@ -135,7 +135,7 @@ export default function TradingViewLanding() {
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Professional-grade trading tools, real-time market data, and AI-powered analytics. 
-            Trade smarter with KAIRO's comprehensive trading ecosystem.
+            Trade smarter with KAIRO&apos;s comprehensive trading ecosystem.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={handleGetStarted} className="text-lg px-8 py-3">

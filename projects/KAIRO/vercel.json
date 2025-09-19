@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "alias": ["www.kairoquantum.com", "kairoquantum.com"],
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "https://api.kairoquantum.com",
+      "NEXT_PUBLIC_WS_URL": "wss://api.kairoquantum.com",
+      "NEXT_PUBLIC_APP_URL": "https://www.kairoquantum.com"
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://api.kairoquantum.com",
+    "NEXT_PUBLIC_WS_URL": "wss://api.kairoquantum.com",
+    "NEXT_PUBLIC_APP_URL": "https://www.kairoquantum.com"
+  },
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://www.kairoquantum.com/$1",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "kairoquantum.com"
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

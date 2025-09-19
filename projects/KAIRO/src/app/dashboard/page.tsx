@@ -12,6 +12,8 @@ import StrategyTemplates from '@/components/dashboard/StrategyTemplates';
 import SignalDeliverySystem from '@/components/dashboard/SignalDeliverySystem';
 import BacktestingEngine from '@/components/dashboard/BacktestingEngine';
 import PerformanceAnalytics from '@/components/dashboard/PerformanceAnalytics';
+import BrokerAccountSelector from '@/components/BrokerAccountSelector';
+import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
 import {
   TrendingUp,
   TrendingDown,
@@ -31,6 +33,7 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { selectedAccount, setSelectedAccount } = useBrokerAccount();
   const [activeView, setActiveView] = useState<'overview' | 'trading' | 'automation' | 'strategies' | 'ai-signals' | 'templates' | 'signals' | 'backtesting' | 'performance-analytics'>('overview');
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -64,6 +67,18 @@ export default function DashboardPage() {
               <p className="text-blue-100">
                 Your trading performance is looking strong today. Ready to make some moves?
               </p>
+              {/* Broker Account Selector */}
+              <div className="mt-4 max-w-md">
+                <label className="block text-sm font-medium text-blue-100 mb-2">
+                  Active Broker Account
+                </label>
+                <BrokerAccountSelector
+                  selectedAccount={selectedAccount}
+                  onAccountSelect={setSelectedAccount}
+                  placeholder="Select your trading account"
+                  className="text-gray-900"
+                />
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <button

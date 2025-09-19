@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const { handleAuthError } = useErrorHandler();
+  const { handleError } = useErrorHandler();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +24,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push('/dashboard');
     } catch (error) {
-      handleAuthError(error, 'Login attempt failed');
+      handleError(error as Error, 'Login attempt failed');
     } finally {
       setLoading(false);
     }

@@ -541,10 +541,18 @@ export default function PaymentProcessing() {
   };
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+    try {
+      if (typeof amount !== 'number' || isNaN(amount)) {
+        return '$0';
+      }
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+      }).format(amount);
+    } catch (error) {
+      console.warn('Error formatting currency:', error);
+      return '$0';
+    }
   };
 
   const retryPayment = async (subscriptionId: string) => {

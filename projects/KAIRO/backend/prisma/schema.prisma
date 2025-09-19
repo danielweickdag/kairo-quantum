@@ -44,6 +44,7 @@ model User {
   posts             Post[]
   comments          Comment[]
   likes             Like[]
+  brokerConnections BrokerConnection[]
 
   @@map("users")
 }
@@ -292,6 +293,30 @@ enum RiskLevel {
   VERY_HIGH
 }
 
+enum BrokerType {
+  ALPACA
+  INTERACTIVE_BROKERS
+  TD_AMERITRADE
+  TRADIER
+  ROBINHOOD
+  FIDELITY
+  SCHWAB
+  ETRADE
+}
+
+enum BrokerAccountType {
+  CASH
+  MARGIN
+  IRA
+  ROTH_IRA
+}
+
+enum BrokerAccountStatus {
+  ACTIVE
+  INACTIVE
+  RESTRICTED
+}
+
 enum TradeSide {
   BUY
   SELL
@@ -350,4 +375,125 @@ model AIBotConfig {
   botTrades             BotTrade[]
 
   @@map("ai_bot_configs")
+}
+
+model BrokerConnection {
+  id              String              @id @default(cuid())
+  accountName     String
+  brokerType      BrokerType
+  isActive        Boolean             @default(true)
+  isConnected     Boolean             @default(false)
+  lastSyncAt      DateTime?
+  apiKey          String              // Encrypted
+  apiSecret       String              // Encrypted
+  accessToken     String?             // Encrypted
+  refreshToken    String?             // Encrypted
+  accountId       String?
+  environment     String              @default("sandbox") // sandbox or production
+  metadata        Json?               // Additional broker-specific data
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  brokerAccounts  BrokerAccount[]
+  brokerTrades    BrokerTrade[]
+
+  @@unique([userId, brokerType, accountName])
+  @@map("broker_connections")
+}
+
+model BrokerAccount {
+  id                      String              @id @default(cuid())
+  accountNumber           String
+  accountType             BrokerAccountType
+  status                  BrokerAccountStatus @default(ACTIVE)
+  buyingPower             Float               @default(0)
+  cashBalance             Float               @default(0)
+  portfolioValue          Float               @default(0)
+  dayTradingBuyingPower   Float?              
+  maintenanceMargin       Float?
+  currency                String              @default("USD")
+  lastUpdated             DateTime            @default(now())
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  brokerConnectionId      String
+  brokerConnection        BrokerConnection    @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
+
+  brokerPositions         BrokerPosition[]
+  brokerOrders            BrokerOrder[]
+
+  @@unique([brokerConnectionId, accountNumber])
+  @@map("broker_accounts")
+}
+
+model BrokerPosition {
+  id                    String        @id @default(cuid())
+  symbol                String
+  quantity              Float
+  marketValue           Float
+  averageCost           Float
+  unrealizedPnL         Float         @default(0)
+  unrealizedPnLPercent  Float         @default(0)
+  side                  String        // LONG or SHORT
+  lastUpdated           DateTime      @default(now())
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  brokerAccountId       String
+  brokerAccount         BrokerAccount @relation(fields: [brokerAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([brokerAccountId, symbol])
+  @@map("broker_positions")
+}
+
+model BrokerOrder {
+  id                String        @id @default(cuid())
+  orderId           String        // Broker's order ID
+  symbol            String
+  side              TradeSide
+  orderType         OrderType
+  quantity          Float
+  price             Float?
+  stopPrice         Float?
+  timeInForce       String        @default("DAY") // DAY, GTC, IOC, FOK
+  status            String        @default("NEW") // NEW, PARTIALLY_FILLED, FILLED, CANCELED, REJECTED
+  filledQuantity    Float         @default(0)
+  averageFillPrice  Float?
+  commission        Float         @default(0)
+  submittedAt       DateTime      @default(now())
+  filledAt          DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  brokerAccountId   String
+  brokerAccount     BrokerAccount @relation(fields: [brokerAccountId], references: [id], onDelete: Cascade)
+
+  brokerTrades      BrokerTrade[]
+
+  @@unique([brokerAccountId, orderId])
+  @@map("broker_orders")
+}
+
+model BrokerTrade {
+  id                String           @id @default(cuid())
+  tradeId           String           // Broker's trade ID
+  symbol            String
+  side              TradeSide
+  quantity          Float
+  price             Float
+  commission        Float            @default(0)
+  executedAt        DateTime
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  brokerConnectionId String
+  brokerConnection   BrokerConnection @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
+  brokerOrderId      String?
+  brokerOrder        BrokerOrder?     @relation(fields: [brokerOrderId], references: [id])
+
+  @@unique([brokerConnectionId, tradeId])
+  @@map("broker_trades")
 }

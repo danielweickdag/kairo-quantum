@@ -30,7 +30,8 @@ import {
   CreditCard,
   Crown,
   Award,
-  Bot
+  Bot,
+  Link
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -114,6 +115,12 @@ const navigationItems: NavigationItem[] = [
     href: '/automation',
     icon: Bot,
     description: 'Automated trading and system management'
+  },
+  {
+    name: 'Brokers',
+    href: '/brokers',
+    icon: Link,
+    description: 'Connect and manage broker accounts'
   }
 ];
 

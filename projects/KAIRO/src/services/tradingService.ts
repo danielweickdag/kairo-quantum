@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { errorHandler, handleNetworkError, handleTradingError, handleValidationError } from '@/lib/errorHandler';
 
 // Market types supported by GainzAlgo integration
@@ -35,6 +36,8 @@ export interface CreateTradeRequest {
   orderType?: 'MARKET' | 'LIMIT' | 'STOP';
   signalId?: string; // Reference to GainzAlgo signal
   timeFrame?: TimeFrame;
+  brokerAccountId?: string; // Selected broker account for execution
+  brokerConnectionId?: string; // Broker connection ID
 }
 
 // Enhanced Trade interface with GainzAlgo features

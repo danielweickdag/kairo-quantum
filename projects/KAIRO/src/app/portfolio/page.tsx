@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
+import { BrokerAccountSelector } from '@/components/trading/BrokerAccountSelector';
 import {
   TrendingUp,
   TrendingDown,
@@ -60,6 +62,7 @@ interface Transaction {
 
 export default function PortfolioPage() {
   const { user } = useAuth();
+  const { selectedAccount, setSelectedAccount } = useBrokerAccount();
   const [activeTab, setActiveTab] = useState<'overview' | 'positions' | 'transactions' | 'analytics'>('overview');
   const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'>('1M');
   const [loading, setLoading] = useState(true);
@@ -221,9 +224,20 @@ export default function PortfolioPage() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   Portfolio
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Track your investments and portfolio performance
                 </p>
+                {/* Broker Account Selector */}
+                <div className="max-w-md">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Active Broker Account
+                  </label>
+                  <BrokerAccountSelector
+                    selectedAccount={selectedAccount}
+                    onAccountSelect={setSelectedAccount}
+                    placeholder="Select your trading account"
+                  />
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <button

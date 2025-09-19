@@ -340,19 +340,29 @@ const PaymentSystem: React.FC = () => {
   ]
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: amount % 100 === 0 ? 0 : 2
-    }).format(amount / 100)
+    if (typeof amount !== 'number' || isNaN(amount)) return '$0.00'
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: amount % 100 === 0 ? 0 : 2
+      }).format(amount / 100)
+    } catch (error) {
+      return '$0.00'
+    }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+    if (!dateString) return 'N/A'
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (error) {
+      return 'Invalid Date'
+    }
   }
 
   const getPaymentMethodIcon = (type: string) => {

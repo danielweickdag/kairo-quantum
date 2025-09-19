@@ -498,16 +498,32 @@ export default function AutomationDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+    try {
+      if (typeof amount !== 'number' || isNaN(amount)) {
+        return '$0';
+      }
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch (error) {
+      console.warn('Error formatting currency:', error);
+      return '$0';
+    }
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
+    try {
+      if (typeof num !== 'number' || isNaN(num)) {
+        return '0';
+      }
+      return new Intl.NumberFormat('en-US').format(num);
+    } catch (error) {
+      console.warn('Error formatting number:', error);
+      return '0';
+    }
   };
 
   const filteredModules = modules.filter(module => {
