@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
-import { BrokerAccountSelector } from '@/components/trading/BrokerAccountSelector';
+import BrokerAccountSelector from '@/components/BrokerAccountSelector';
 import {
   TrendingUp,
   TrendingDown,

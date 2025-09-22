@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { BrokerAccountProvider } from '@/contexts/BrokerAccountContext';
+import { TradingModeProvider } from '@/contexts/TradingModeContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +27,9 @@ export function Providers({ children }: ProvidersProps) {
       <ThemeProvider>
         <AuthProvider>
           <BrokerAccountProvider>
-            {children}
+            <TradingModeProvider>
+              {children}
+            </TradingModeProvider>
           </BrokerAccountProvider>
         </AuthProvider>
       </ThemeProvider>

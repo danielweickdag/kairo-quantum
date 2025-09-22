@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTradingMode } from '@/contexts/TradingModeContext';
+import DemoModeIndicator from '@/components/ui/DemoModeIndicator';
 import { toast } from 'react-hot-toast';
 import {
   Menu,
@@ -127,11 +129,13 @@ const navigationItems: NavigationItem[] = [
 export default function Navigation() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { isPaperTrading } = useTradingMode();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [focusedItemIndex, setFocusedItemIndex] = useState(-1);
 
   useEffect(() => {
     setMounted(true);
@@ -151,6 +155,29 @@ export default function Navigation() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  };
+
+  const handleNavigationKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setFocusedItemIndex(prev => (prev + 1) % navigationItems.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setFocusedItemIndex(prev => prev <= 0 ? navigationItems.length - 1 : prev - 1);
+    } else if (event.key === 'Enter' && focusedItemIndex >= 0) {
+      event.preventDefault();
+      router.push(navigationItems[focusedItemIndex].href);
+    } else if (event.key === 'Escape') {
+      setIsProfileMenuOpen(false);
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   const isActive = (href: string) => {
     return pathname === href;
   };
@@ -165,47 +192,57 @@ export default function Navigation() {
       <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-200 lg:dark:border-gray-700 lg:bg-white lg:dark:bg-gray-800 lg:shadow-sm">
         {/* Logo */}
         <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
+          <div className="flex flex-col items-center space-y-1">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">KAIRO</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">KAIRO</span>
+            {isPaperTrading && <DemoModeIndicator className="text-xs" />}
           </div>
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 px-4 py-6 space-y-2">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            
-            return (
-              <button
-                key={item.name}
-                onClick={() => router.push(item.href)}
-                className={`w-full group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-                  active
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-105'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <Icon className={`mr-3 h-5 w-5 transition-colors ${
-                  active ? 'text-white' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'
-                }`} />
-                <span className="flex-1 text-left">{item.name}</span>
-                {item.badge && (
-                  <span className={`ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${
-                    active 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <nav className="flex-1 px-4 py-6" role="navigation" aria-label="Main navigation">
+           <div onKeyDown={handleNavigationKeyDown}>
+             {navigationItems.map((item, index) => {
+               const active = isActive(item.href);
+               const isFocused = focusedItemIndex === index;
+               return (
+                 <button
+                   key={item.href}
+                   onClick={() => router.push(item.href)}
+                   onKeyDown={(e) => handleKeyDown(e, () => router.push(item.href))}
+                   className={`w-full flex items-center space-x-3 px-4 py-3 mb-2 rounded-xl transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                     active
+                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                   } ${
+                     isFocused ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800' : ''
+                   }`}
+                   aria-current={active ? 'page' : undefined}
+                   aria-describedby={item.description ? `${item.href}-desc` : undefined}
+                   title={item.description}
+                 >
+                   <item.icon className={`h-5 w-5 transition-colors ${
+                     active ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                   }`} aria-hidden="true" />
+                   <span className="flex-1 text-left">{item.name}</span>
+                   {item.badge && (
+                     <span className={`ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${
+                       active 
+                         ? 'bg-white/20 text-white' 
+                         : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                     }`} aria-label={`${item.badge} notifications`}>
+                       {item.badge}
+                     </span>
+                   )}
+                 </button>
+               );
+             })}
+           </div>
+         </nav>
 
         {/* User Profile Section */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-4">
@@ -213,6 +250,9 @@ export default function Navigation() {
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-expanded={isProfileMenuOpen}
+              aria-haspopup="menu"
+              aria-label="User profile menu"
             >
               <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-sm">
@@ -234,12 +274,18 @@ export default function Navigation() {
 
             {/* Profile Dropdown */}
             {isProfileMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+              <div 
+                className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2"
+                role="menu"
+                aria-label="User profile menu"
+              >
                 <button
                   onClick={() => router.push('/profile')}
                   className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  role="menuitem"
+                  aria-label="Go to profile page"
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4" aria-hidden="true" />
                   <span>Profile</span>
                 </button>
                 <button
@@ -274,29 +320,42 @@ export default function Navigation() {
       <div className="lg:hidden">
         {/* Mobile Header */}
         <div className="flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center" role="img" aria-label="KAIRO logo">
+                <Zap className="h-5 w-5 text-white" aria-hidden="true" />
+              </div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">KAIRO</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">KAIRO</span>
+            {isPaperTrading && <DemoModeIndicator className="text-xs" />}
           </div>
           
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleTheme}
               className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {theme === 'dark' ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
             </button>
-            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative">
+            <button 
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative"
+              aria-label="Notifications"
+              title="View notifications"
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
             </button>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              onKeyDown={(e) => handleKeyDown(e, () => setIsMobileMenuOpen(!isMobileMenuOpen))}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={isMobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
             >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -332,10 +391,11 @@ export default function Navigation() {
               </div>
 
               {/* Mobile Navigation Items */}
-              <div className="px-4 py-6 space-y-2">
-                {navigationItems.map((item) => {
+              <div className="px-4 py-6 space-y-2" onKeyDown={handleNavigationKeyDown} role="navigation" aria-label="Mobile navigation menu">
+                {navigationItems.map((item, index) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
+                  const isFocused = focusedItemIndex === index;
                   
                   return (
                     <button
@@ -344,21 +404,30 @@ export default function Navigation() {
                         router.push(item.href);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                      onKeyDown={(e) => handleKeyDown(e, () => {
+                        router.push(item.href);
+                        setIsMobileMenuOpen(false);
+                      })}
+                      className={`w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                         active
                           ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      } ${
+                        isFocused ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800' : ''
                       }`}
+                      aria-current={active ? 'page' : undefined}
+                      aria-describedby={item.description ? `${item.href}-mobile-desc` : undefined}
+                      title={item.description}
                     >
                       <Icon className={`mr-3 h-5 w-5 ${
                         active ? 'text-white' : 'text-gray-400'
-                      }`} />
+                      }`} aria-hidden="true" />
                       <div className="flex-1 text-left">
                         <div className="font-medium">{item.name}</div>
                         {item.description && (
                           <div className={`text-xs mt-1 ${
                             active ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'
-                          }`}>
+                          }`} id={`${item.href}-mobile-desc`}>
                             {item.description}
                           </div>
                         )}
@@ -368,7 +437,7 @@ export default function Navigation() {
                           active 
                             ? 'bg-white/20 text-white' 
                             : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                        }`}>
+                        }`} aria-label={`${item.badge} notifications`}>
                           {item.badge}
                         </span>
                       )}

@@ -51,6 +51,7 @@ import {
   Plus
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent } from '@/lib/utils'
+import { useTradingMode } from '@/contexts/TradingModeContext'
 import PineEditor from '../trading/PineEditor'
 import PerformanceAnalytics from '../trading/PerformanceAnalytics'
 import TraderInbox from '../trading/TraderInbox'
@@ -111,6 +112,7 @@ interface Subscription {
 }
 
 const UserAccount: React.FC = () => {
+  const { isPaperTrading, setIsPaperTrading } = useTradingMode()
   const [activeTab, setActiveTab] = useState('overview')
   const [editMode, setEditMode] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -151,7 +153,7 @@ const UserAccount: React.FC = () => {
       confirmOrders: true,
       riskWarnings: true,
       autoSave: true,
-      paperTrading: false
+      paperTrading: isPaperTrading
     },
     security: {
       twoFactorEnabled: true,
@@ -178,6 +180,11 @@ const UserAccount: React.FC = () => {
   })
 
   const updateSetting = (category: keyof AccountSettings, key: string, value: any) => {
+    // Handle paper trading setting specially to update context
+    if (category === 'trading' && key === 'paperTrading') {
+      setIsPaperTrading(value)
+    }
+    
     setSettings(prev => ({
       ...prev,
       [category]: {

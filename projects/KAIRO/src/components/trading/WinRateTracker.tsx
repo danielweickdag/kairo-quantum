@@ -35,7 +35,7 @@ export default function WinRateTracker({ marketType, timeRange = '30d' }: WinRat
 
   useEffect(() => {
     fetchMetrics();
-  }, [marketType, timeRange]);
+  }, [marketType, timeRange, fetchMetrics]);
 
   const getWinRateColor = (winRate: number) => {
     if (winRate >= 75) return 'text-green-500';

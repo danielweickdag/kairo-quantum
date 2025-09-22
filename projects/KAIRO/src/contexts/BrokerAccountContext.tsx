@@ -95,7 +95,7 @@ export function BrokerAccountProvider({ children }: BrokerAccountProviderProps) 
 
   useEffect(() => {
     fetchBrokerAccounts();
-  }, []);
+  }, [fetchBrokerAccounts]);
 
   // Save selected account to localStorage
   useEffect(() => {

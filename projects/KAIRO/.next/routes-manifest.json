@@ -1,1 +1,276 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[{"source":"/api/:path*","destination":"http://localhost:3001/api/:path*","regex":"^\\/api(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))?(?:\\/)?$","check":true}],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"},{"source":"/home","destination":"/","permanent":true,"regex":"^(?!\\/_next)\\/home(?:\\/)?$"}],"headers":[{"source":"/(.*)","headers":[{"key":"X-Frame-Options","value":"DENY"},{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"origin-when-cross-origin"}],"regex":"^(?:\\/(.*))(?:\\/)?$"}]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    },
+    {
+      "source": "/home",
+      "destination": "/",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/home(?:/)?$"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        }
+      ],
+      "regex": "^(?:/(.*))(?:/)?$"
+    }
+  ],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [
+      {
+        "source": "/api/:path*",
+        "destination": "http://localhost:3001/api/:path*",
+        "regex": "^/api(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+      }
+    ],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/automation",
+      "regex": "^/automation(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation(?:/)?$"
+    },
+    {
+      "page": "/automation/copy-trading",
+      "regex": "^/automation/copy\\-trading(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/copy\\-trading(?:/)?$"
+    },
+    {
+      "page": "/automation/data-pipeline",
+      "regex": "^/automation/data\\-pipeline(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/data\\-pipeline(?:/)?$"
+    },
+    {
+      "page": "/automation/notifications",
+      "regex": "^/automation/notifications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/notifications(?:/)?$"
+    },
+    {
+      "page": "/automation/onboarding",
+      "regex": "^/automation/onboarding(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/onboarding(?:/)?$"
+    },
+    {
+      "page": "/automation/payments",
+      "regex": "^/automation/payments(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/payments(?:/)?$"
+    },
+    {
+      "page": "/automation/reporting",
+      "regex": "^/automation/reporting(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/reporting(?:/)?$"
+    },
+    {
+      "page": "/automation/risk-management",
+      "regex": "^/automation/risk\\-management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/risk\\-management(?:/)?$"
+    },
+    {
+      "page": "/automation/trading-bot",
+      "regex": "^/automation/trading\\-bot(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/automation/trading\\-bot(?:/)?$"
+    },
+    {
+      "page": "/brokers",
+      "regex": "^/brokers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/brokers(?:/)?$"
+    },
+    {
+      "page": "/copy-trade",
+      "regex": "^/copy\\-trade(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/copy\\-trade(?:/)?$"
+    },
+    {
+      "page": "/creators",
+      "regex": "^/creators(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/creators(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/demo",
+      "regex": "^/demo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/demo(?:/)?$"
+    },
+    {
+      "page": "/help",
+      "regex": "^/help(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/help(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/payment",
+      "regex": "^/payment(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/payment(?:/)?$"
+    },
+    {
+      "page": "/portfolio",
+      "regex": "^/portfolio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portfolio(?:/)?$"
+    },
+    {
+      "page": "/pricing",
+      "regex": "^/pricing(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/pricing(?:/)?$"
+    },
+    {
+      "page": "/profile",
+      "regex": "^/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/security",
+      "regex": "^/security(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/security(?:/)?$"
+    },
+    {
+      "page": "/settings",
+      "regex": "^/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/settings(?:/)?$"
+    },
+    {
+      "page": "/social",
+      "regex": "^/social(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/social(?:/)?$"
+    },
+    {
+      "page": "/trading",
+      "regex": "^/trading(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading(?:/)?$"
+    },
+    {
+      "page": "/trading/futures",
+      "regex": "^/trading/futures(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/futures(?:/)?$"
+    },
+    {
+      "page": "/trading/live",
+      "regex": "^/trading/live(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/live(?:/)?$"
+    },
+    {
+      "page": "/trading/market-updates",
+      "regex": "^/trading/market\\-updates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/market\\-updates(?:/)?$"
+    },
+    {
+      "page": "/trading/options",
+      "regex": "^/trading/options(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/options(?:/)?$"
+    },
+    {
+      "page": "/trading/pine-editor",
+      "regex": "^/trading/pine\\-editor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/pine\\-editor(?:/)?$"
+    },
+    {
+      "page": "/trading/profit-targets",
+      "regex": "^/trading/profit\\-targets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/trading/profit\\-targets(?:/)?$"
+    },
+    {
+      "page": "/user-dashboard",
+      "regex": "^/user\\-dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/user\\-dashboard(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

@@ -283,7 +283,7 @@ export default function DrawdownMonitor() {
     if (newAlerts.length > 0) {
       setAlerts(prev => [...prev.slice(-9), ...newAlerts]); // Keep last 10 alerts
     }
-  }, [metrics.currentDrawdownPercent, alertsEnabled, warningThreshold, criticalThreshold]);
+  }, [metrics.currentDrawdownPercent, alertsEnabled, warningThreshold, criticalThreshold, alerts]);
 
   const refreshData = () => {
     setIsLoading(true);

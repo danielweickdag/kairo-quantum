@@ -37,6 +37,8 @@ import {
   type Trade
 } from '@/services/liveMarketService';
 import { useLiveTrading, OrderRequest } from '@/services/liveTradingService';
+import { useTradingMode } from '@/contexts/TradingModeContext';
+import DemoModeIndicator from '@/components/ui/DemoModeIndicator';
 
 // Using types from live trading service
 import type { TradingPosition, TradingOrder } from '@/services/liveTradingService';
@@ -76,6 +78,7 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
   className = '',
   defaultSymbol = 'BTCUSDT'
 }) => {
+  const { isPaperTrading } = useTradingMode();
   const [selectedSymbol, setSelectedSymbol] = useState(defaultSymbol);
   const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop'>('market');
   const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
@@ -272,6 +275,11 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
 
   return (
     <div className={`w-full space-y-2 sm:space-y-4 ${className}`}>
+      {/* Demo Mode Banner */}
+      {isPaperTrading && (
+        <DemoModeIndicator variant="banner" />
+      )}
+      
       {/* Header with Symbol Selector and Market Stats */}
       <div className="flex flex-col lg:flex-row gap-2 sm:gap-4">
         <Card className="flex-1">
@@ -281,7 +289,8 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
                 <select 
                   value={selectedSymbol} 
                   onChange={(e) => setSelectedSymbol(e.target.value)}
-                  className="w-32 sm:w-40 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600"
+                  className="w-32 sm:w-40 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  aria-label="Select trading symbol"
                 >
                   {supportedSymbols.map(symbol => (
                     <option key={symbol} value={symbol}>
@@ -451,56 +460,69 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
             </CardHeader>
             <CardContent className="space-y-2 sm:space-y-4 pt-2 sm:pt-6">
               <Tabs value={orderSide} onValueChange={(value) => setOrderSide(value as 'buy' | 'sell')}>
-                <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
-                  <TabsTrigger value="buy" className="text-green-600 text-xs sm:text-sm">Buy</TabsTrigger>
-                  <TabsTrigger value="sell" className="text-red-600 text-xs sm:text-sm">Sell</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10" role="tablist" aria-label="Order side selection">
+                  <TabsTrigger value="buy" className="text-green-600 text-xs sm:text-sm" aria-label="Buy order">Buy</TabsTrigger>
+                  <TabsTrigger value="sell" className="text-red-600 text-xs sm:text-sm" aria-label="Sell order">Sell</TabsTrigger>
                 </TabsList>
               </Tabs>
               
               <div className="space-y-2 sm:space-y-3">
                 <div>
-                  <label className="text-xs sm:text-sm font-medium">Order Type</label>
+                  <label htmlFor="order-type" className="text-xs sm:text-sm font-medium">Order Type</label>
                     <select 
+                    id="order-type"
                     value={orderType} 
                     onChange={(e) => setOrderType(e.target.value as 'market' | 'limit' | 'stop')}
-                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                    aria-describedby="order-type-help"
                   >
                     <option value="market">Market</option>
                     <option value="limit">Limit</option>
                     <option value="stop">Stop</option>
                   </select>
+                  <div id="order-type-help" className="sr-only">Select the type of order to place</div>
                 </div>
                 
                 {orderType !== 'market' && (
                   <div>
-                    <label className="text-xs sm:text-sm font-medium">Price</label>
+                    <label htmlFor="order-price" className="text-xs sm:text-sm font-medium">Price</label>
                     <Input
+                      id="order-price"
                       type="number"
                       placeholder="0.00"
                       value={orderPrice}
                       onChange={(e) => setOrderPrice(e.target.value)}
-                      className="h-8 sm:h-10 text-sm sm:text-base"
+                      className="h-8 sm:h-10 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                      aria-describedby="order-price-help"
+                      aria-label="Order price in USD"
                     />
+                    <div id="order-price-help" className="sr-only">Enter the price for your {orderType} order</div>
                   </div>
                 )}
                 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium">Size</label>
+                  <label htmlFor="order-size" className="text-xs sm:text-sm font-medium">Size</label>
                   <Input
+                    id="order-size"
                     type="number"
                     placeholder="0.00"
                     value={orderSize}
                     onChange={(e) => setOrderSize(e.target.value)}
-                    className="h-8 sm:h-10 text-sm sm:text-base"
+                    className="h-8 sm:h-10 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                    aria-describedby="order-size-help"
+                    aria-label={`Order size in ${selectedSymbol}`}
                   />
+                  <div id="order-size-help" className="sr-only">Enter the amount of {selectedSymbol} to {orderSide}</div>
                 </div>
                 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium">Leverage</label>
+                  <label htmlFor="leverage" className="text-xs sm:text-sm font-medium">Leverage</label>
                     <select 
+                    id="leverage"
                     value={leverage.toString()} 
                     onChange={(e) => setLeverage(parseInt(e.target.value))}
-                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                    aria-describedby="leverage-help"
                   >
                     <option value="1">1x</option>
                     <option value="2">2x</option>
@@ -508,19 +530,25 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
                     <option value="10">10x</option>
                     <option value="20">20x</option>
                   </select>
+                  <div id="leverage-help" className="sr-only">Select leverage multiplier for your position</div>
                 </div>
                 
                 <Button 
                   onClick={placeOrder}
-                  className={`w-full h-8 sm:h-10 text-sm sm:text-base ${
+                  className={`w-full h-8 sm:h-10 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                     orderSide === 'buy' 
-                      ? 'bg-green-600 hover:bg-green-700' 
-                      : 'bg-red-600 hover:bg-red-700'
+                      ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                      : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                   }`}
                   disabled={!isTrading}
+                  aria-describedby="place-order-help"
+                  aria-label={`Place ${orderType} ${orderSide} order for ${orderSize || '0'} ${selectedSymbol}${orderType !== 'market' ? ` at $${orderPrice || '0'}` : ''}`}
                 >
                   {orderSide === 'buy' ? 'Buy' : 'Sell'} {selectedSymbol}
                 </Button>
+                <div id="place-order-help" className="sr-only">
+                  {!isTrading ? 'Trading is currently disabled' : `Place a ${orderType} ${orderSide} order`}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -537,19 +565,22 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowOrderBook(!showOrderBook)}
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  aria-label={showOrderBook ? 'Hide order book' : 'Show order book'}
+                  aria-expanded={showOrderBook}
+                  aria-controls="order-book-content"
                 >
-                  {showOrderBook ? <EyeOff className="h-3 w-3 sm:h-4 sm:w-4" /> : <Eye className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  {showOrderBook ? <EyeOff className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" /> : <Eye className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />}
                 </Button>
               </div>
             </CardHeader>
             {showOrderBook && orderBook && (
-              <CardContent className="pt-2 sm:pt-6">
-                <div className="space-y-1 sm:space-y-2">
-                  <div className="text-xs text-muted-foreground grid grid-cols-3 gap-1 sm:gap-2">
-                    <span>Price</span>
-                    <span className="text-right">Size</span>
-                    <span className="text-right">Total</span>
+              <CardContent id="order-book-content" className="pt-2 sm:pt-6">
+                <div className="space-y-1 sm:space-y-2" role="table" aria-label="Order book data">
+                  <div className="text-xs text-muted-foreground grid grid-cols-3 gap-1 sm:gap-2" role="row">
+                    <span role="columnheader">Price</span>
+                    <span className="text-right" role="columnheader">Size</span>
+                    <span className="text-right" role="columnheader">Total</span>
                   </div>
                   
                   {/* Asks (Sell orders) */}
