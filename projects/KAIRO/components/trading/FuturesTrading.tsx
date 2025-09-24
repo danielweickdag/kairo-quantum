@@ -66,6 +66,7 @@ const FuturesTrading: React.FC = () => {
 
   // Mock futures contracts data
   const mockContracts: FuturesContract[] = [
+    // Equity Index Futures
     {
       id: '1',
       symbol: 'ES',
@@ -97,6 +98,37 @@ const FuturesTrading: React.FC = () => {
       sector: 'equity'
     },
     {
+      id: '7',
+      symbol: 'YM',
+      name: 'E-mini Dow Jones',
+      price: 38450.00,
+      change: 125.00,
+      changePercent: 0.33,
+      volume: 180000,
+      openInterest: 250000,
+      expiryDate: '2024-03-15',
+      tickSize: 1.00,
+      contractSize: 5,
+      marginRequired: 9500,
+      sector: 'equity'
+    },
+    {
+      id: '8',
+      symbol: 'RTY',
+      name: 'E-mini Russell 2000',
+      price: 2045.30,
+      change: -8.70,
+      changePercent: -0.42,
+      volume: 320000,
+      openInterest: 450000,
+      expiryDate: '2024-03-15',
+      tickSize: 0.10,
+      contractSize: 50,
+      marginRequired: 7200,
+      sector: 'equity'
+    },
+    // Energy Futures
+    {
       id: '3',
       symbol: 'CL',
       name: 'Crude Oil',
@@ -111,6 +143,37 @@ const FuturesTrading: React.FC = () => {
       marginRequired: 4200,
       sector: 'energy'
     },
+    {
+      id: '9',
+      symbol: 'NG',
+      name: 'Natural Gas',
+      price: 2.85,
+      change: 0.12,
+      changePercent: 4.40,
+      volume: 280000,
+      openInterest: 420000,
+      expiryDate: '2024-02-28',
+      tickSize: 0.001,
+      contractSize: 10000,
+      marginRequired: 2800,
+      sector: 'energy'
+    },
+    {
+      id: '10',
+      symbol: 'RB',
+      name: 'RBOB Gasoline',
+      price: 2.45,
+      change: 0.08,
+      changePercent: 3.37,
+      volume: 95000,
+      openInterest: 140000,
+      expiryDate: '2024-02-29',
+      tickSize: 0.0001,
+      contractSize: 42000,
+      marginRequired: 3500,
+      sector: 'energy'
+    },
+    // Metals Futures
     {
       id: '4',
       symbol: 'GC',
@@ -127,6 +190,37 @@ const FuturesTrading: React.FC = () => {
       sector: 'metals'
     },
     {
+      id: '11',
+      symbol: 'SI',
+      name: 'Silver',
+      price: 24.85,
+      change: 0.45,
+      changePercent: 1.84,
+      volume: 120000,
+      openInterest: 180000,
+      expiryDate: '2024-03-26',
+      tickSize: 0.005,
+      contractSize: 5000,
+      marginRequired: 6200,
+      sector: 'metals'
+    },
+    {
+      id: '12',
+      symbol: 'HG',
+      name: 'Copper',
+      price: 3.85,
+      change: 0.02,
+      changePercent: 0.52,
+      volume: 85000,
+      openInterest: 125000,
+      expiryDate: '2024-03-26',
+      tickSize: 0.0005,
+      contractSize: 25000,
+      marginRequired: 4800,
+      sector: 'metals'
+    },
+    // Bond Futures
+    {
       id: '5',
       symbol: 'ZN',
       name: '10-Year Treasury Note',
@@ -142,6 +236,37 @@ const FuturesTrading: React.FC = () => {
       sector: 'bonds'
     },
     {
+      id: '13',
+      symbol: 'ZB',
+      name: '30-Year Treasury Bond',
+      price: 125.50,
+      change: 0.25,
+      changePercent: 0.20,
+      volume: 320000,
+      openInterest: 480000,
+      expiryDate: '2024-03-20',
+      tickSize: 0.03125,
+      contractSize: 100000,
+      marginRequired: 3200,
+      sector: 'bonds'
+    },
+    {
+      id: '14',
+      symbol: 'ZF',
+      name: '5-Year Treasury Note',
+      price: 107.75,
+      change: 0.125,
+      changePercent: 0.12,
+      volume: 420000,
+      openInterest: 650000,
+      expiryDate: '2024-03-29',
+      tickSize: 0.0078125,
+      contractSize: 100000,
+      marginRequired: 1200,
+      sector: 'bonds'
+    },
+    // Cryptocurrency Futures
+    {
       id: '6',
       symbol: 'BTC',
       name: 'Bitcoin',
@@ -155,6 +280,67 @@ const FuturesTrading: React.FC = () => {
       contractSize: 5,
       marginRequired: 25000,
       sector: 'crypto'
+    },
+    {
+      id: '15',
+      symbol: 'ETH',
+      name: 'Ethereum',
+      price: 2650.00,
+      change: 85.00,
+      changePercent: 3.32,
+      volume: 8500,
+      openInterest: 12000,
+      expiryDate: '2024-03-29',
+      tickSize: 0.05,
+      contractSize: 50,
+      marginRequired: 15000,
+      sector: 'crypto'
+    },
+    // Agricultural Futures
+    {
+      id: '16',
+      symbol: 'ZC',
+      name: 'Corn',
+      price: 485.25,
+      change: 8.50,
+      changePercent: 1.78,
+      volume: 180000,
+      openInterest: 320000,
+      expiryDate: '2024-05-14',
+      tickSize: 0.25,
+      contractSize: 5000,
+      marginRequired: 2200,
+      sector: 'agriculture'
+    },
+    {
+      id: '17',
+      symbol: 'ZS',
+      name: 'Soybeans',
+      price: 1245.50,
+      change: -12.25,
+      changePercent: -0.97,
+      volume: 95000,
+      openInterest: 180000,
+      expiryDate: '2024-05-14',
+      tickSize: 0.25,
+      contractSize: 5000,
+      marginRequired: 4500,
+      sector: 'agriculture'
+    },
+    {
+      id: '18',
+      symbol: 'ZW',
+      name: 'Wheat',
+      price: 625.75,
+      change: 5.25,
+      changePercent: 0.85,
+      volume: 65000,
+      openInterest: 120000,
+      expiryDate: '2024-05-14',
+      tickSize: 0.25,
+      contractSize: 5000,
+      marginRequired: 2800,
+      sector: 'agriculture'
     }
   ];
 
@@ -295,7 +481,8 @@ const FuturesTrading: React.FC = () => {
       energy: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
       metals: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
       bonds: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-      crypto: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+      crypto: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+      agriculture: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400'
     };
     return colors[sector as keyof typeof colors] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
   };
@@ -370,6 +557,7 @@ const FuturesTrading: React.FC = () => {
                     <option value="metals">Metals</option>
                     <option value="bonds">Bonds</option>
                     <option value="crypto">Crypto</option>
+                    <option value="agriculture">Agriculture</option>
                   </select>
                 </div>
               </div>

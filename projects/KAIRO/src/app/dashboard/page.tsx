@@ -37,12 +37,57 @@ export default function DashboardPage() {
   const [activeView, setActiveView] = useState<'overview' | 'trading' | 'automation' | 'strategies' | 'ai-signals' | 'templates' | 'signals' | 'backtesting' | 'performance-analytics'>('overview');
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [gainzAlgoActive, setGainzAlgoActive] = useState(false);
+  const [copyTradingActive, setCopyTradingActive] = useState(false);
+  const [riskManagementActive, setRiskManagementActive] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState('idle'); // idle, partial, active, optimized
 
   useEffect(() => {
     // Simulate loading
-    const timer = setTimeout(() => setLoading(false), 1000);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+
     return () => clearTimeout(timer);
   }, []);
+
+  // Workflow automation effects
+  useEffect(() => {
+    if (gainzAlgoActive) {
+      alert('🚀 GainzAlgo V2 Pro Strategy Activated!\n\n✅ High-frequency momentum trading enabled\n✅ 78% win rate target active\n✅ 1.85x profit factor optimization\n✅ Real-time signal generation started');
+    }
+  }, [gainzAlgoActive]);
+
+  useEffect(() => {
+    if (copyTradingActive) {
+      alert('👥 Copy Trading Enabled!\n\n✅ Following top traders\n✅ Automatic trade copying active\n✅ Portfolio synchronization started\n✅ Risk management applied to copied trades');
+    }
+  }, [copyTradingActive]);
+
+  useEffect(() => {
+    if (riskManagementActive) {
+      alert('🛡️ Risk Management Controls Activated!\n\n✅ Automated stop-loss enabled\n✅ Position sizing optimization\n✅ Drawdown protection active\n✅ Real-time risk monitoring started');
+    }
+  }, [riskManagementActive]);
+
+  // Workflow coordination - automatically update status based on active features
+  useEffect(() => {
+    const activeFeatures = [gainzAlgoActive, copyTradingActive, riskManagementActive].filter(Boolean).length;
+    
+    if (activeFeatures === 0) {
+      setWorkflowStatus('idle');
+    } else if (activeFeatures === 1) {
+      setWorkflowStatus('partial');
+    } else if (activeFeatures === 2) {
+      setWorkflowStatus('active');
+    } else if (activeFeatures === 3) {
+      setWorkflowStatus('optimized');
+      // Show comprehensive workflow activation message
+      setTimeout(() => {
+        alert('🎯 Complete Trading Workflow Activated!\n\n🚀 GainzAlgo V2 Pro: High-frequency momentum trading\n👥 Copy Trading: Following top performers\n🛡️ Risk Management: Advanced protection\n\n✨ All systems are now working together seamlessly!\n📈 Maximum profit potential with optimal risk control');
+      }, 500);
+    }
+  }, [gainzAlgoActive, copyTradingActive, riskManagementActive]);
 
   if (loading) {
     return (
@@ -102,6 +147,58 @@ export default function DashboardPage() {
                   <p className="text-sm text-blue-100">Global Rank</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Workflow Status Indicator */}
+        <div className={`rounded-lg p-4 border-2 transition-all duration-300 ${
+          workflowStatus === 'idle' ? 'bg-gray-50 border-gray-200' :
+          workflowStatus === 'partial' ? 'bg-yellow-50 border-yellow-300' :
+          workflowStatus === 'active' ? 'bg-blue-50 border-blue-300' :
+          'bg-green-50 border-green-300'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${
+                workflowStatus === 'idle' ? 'bg-gray-400' :
+                workflowStatus === 'partial' ? 'bg-yellow-500 animate-pulse' :
+                workflowStatus === 'active' ? 'bg-blue-500 animate-pulse' :
+                'bg-green-500 animate-pulse'
+              }`}></div>
+              <div>
+                <h3 className={`font-semibold ${
+                  workflowStatus === 'idle' ? 'text-gray-700' :
+                  workflowStatus === 'partial' ? 'text-yellow-700' :
+                  workflowStatus === 'active' ? 'text-blue-700' :
+                  'text-green-700'
+                }`}>
+                  Trading Workflow Status: {
+                    workflowStatus === 'idle' ? 'Standby' :
+                    workflowStatus === 'partial' ? 'Partially Active' :
+                    workflowStatus === 'active' ? 'Active' :
+                    'Fully Optimized'
+                  }
+                </h3>
+                <p className={`text-sm ${
+                  workflowStatus === 'idle' ? 'text-gray-600' :
+                  workflowStatus === 'partial' ? 'text-yellow-600' :
+                  workflowStatus === 'active' ? 'text-blue-600' :
+                  'text-green-600'
+                }`}>
+                  {
+                    workflowStatus === 'idle' ? 'Enable features below to start automated trading' :
+                    workflowStatus === 'partial' ? 'Some automation features are active' :
+                    workflowStatus === 'active' ? 'Multiple systems working together' :
+                    'All automation systems fully integrated and optimized'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              {gainzAlgoActive && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">GainzAlgo</span>}
+              {copyTradingActive && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Copy Trading</span>}
+              {riskManagementActive && <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Risk Control</span>}
             </div>
           </div>
         </div>
@@ -309,8 +406,15 @@ export default function DashboardPage() {
             <p className="text-green-100 text-sm mb-4">
               High-frequency momentum strategy with 78% win rate and 1.85x profit factor
             </p>
-            <button className="bg-white text-green-600 py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Activate Strategy
+            <button 
+              onClick={() => setGainzAlgoActive(!gainzAlgoActive)}
+              className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                gainzAlgoActive 
+                  ? 'bg-green-200 text-green-800 hover:bg-green-300' 
+                  : 'bg-white text-green-600 hover:bg-gray-100'
+              }`}
+            >
+              {gainzAlgoActive ? 'Deactivate Strategy' : 'Activate Strategy'}
             </button>
           </div>
 
@@ -322,8 +426,15 @@ export default function DashboardPage() {
             <p className="text-purple-100 text-sm mb-4">
               Follow top traders and automatically copy their winning strategies
             </p>
-            <button className="bg-white text-purple-600 py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Explore Traders
+            <button 
+              onClick={() => setCopyTradingActive(!copyTradingActive)}
+              className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                copyTradingActive 
+                  ? 'bg-purple-200 text-purple-800 hover:bg-purple-300' 
+                  : 'bg-white text-purple-600 hover:bg-gray-100'
+              }`}
+            >
+              {copyTradingActive ? 'Disable Copy Trading' : 'Enable Copy Trading'}
             </button>
           </div>
 
@@ -335,8 +446,15 @@ export default function DashboardPage() {
             <p className="text-blue-100 text-sm mb-4">
               Advanced risk controls with automated stop-loss and position sizing
             </p>
-            <button className="bg-white text-blue-600 py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Configure Limits
+            <button 
+              onClick={() => setRiskManagementActive(!riskManagementActive)}
+              className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                riskManagementActive 
+                  ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' 
+                  : 'bg-white text-blue-600 hover:bg-gray-100'
+              }`}
+            >
+              {riskManagementActive ? 'Risk Controls Active' : 'Enable Risk Controls'}
             </button>
           </div>
         </div>

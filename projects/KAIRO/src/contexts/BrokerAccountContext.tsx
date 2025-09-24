@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface BrokerAccount {
   id: string;
@@ -40,14 +40,18 @@ export function BrokerAccountProvider({ children }: BrokerAccountProviderProps) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBrokerAccounts = async () => {
+  const fetchBrokerAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        // User is not authenticated, set empty accounts and return
+        setAccounts([]);
+        setSelectedAccount(null);
+        setLoading(false);
+        return;
       }
 
       const response = await fetch('/api/brokers/accounts', {
@@ -87,7 +91,7 @@ export function BrokerAccountProvider({ children }: BrokerAccountProviderProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedAccount]);
 
   const refreshAccounts = async () => {
     await fetchBrokerAccounts();
@@ -95,7 +99,7 @@ export function BrokerAccountProvider({ children }: BrokerAccountProviderProps) 
 
   useEffect(() => {
     fetchBrokerAccounts();
-  }, [fetchBrokerAccounts]);
+  }, []);
 
   // Save selected account to localStorage
   useEffect(() => {

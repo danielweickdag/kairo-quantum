@@ -34,7 +34,12 @@ const nextConfig = {
   
   // API rewrites for backend integration
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.kairoquantum.com';
+    // In development, proxy to local backend server
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const apiUrl = isDevelopment 
+      ? 'http://localhost:3002'
+      : (process.env.NEXT_PUBLIC_API_URL || 'https://api.kairoquantum.com');
+    
     return [
       {
         source: '/api/:path*',

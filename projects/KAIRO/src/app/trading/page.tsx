@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import AppLayout from '@/components/layouts/AppLayout';
 import {
   TrendingUp,
   TrendingDown,
@@ -31,6 +32,8 @@ import { tradingService, CreateTradeRequest } from '@/services/tradingService';
 import { toast } from 'react-hot-toast';
 import BrokerAccountSelector from '@/components/BrokerAccountSelector';
 import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
+import { liveMarketService, useMarketData } from '@/services/liveMarketService';
+import LiveChart from '@/components/trading/LiveChart';
 
 interface MarketData {
   symbol: string;
@@ -75,8 +78,13 @@ export default function TradingPage() {
   const [loading, setLoading] = useState(true);
   const [portfolioId, setPortfolioId] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
+  const [isLiveDataEnabled, setIsLiveDataEnabled] = useState(false);
+  
+  // Get live market data
+  const liveMarketData = useMarketData();
 
-  // Mock market data
+  // Initialize market data (will be updated with live data)
   const [marketData, setMarketData] = useState<MarketData[]>([
     {
       symbol: 'AAPL',
@@ -197,10 +205,70 @@ export default function TradingPage() {
   const [watchlist, setWatchlist] = useState<string[]>(['AAPL', 'TSLA', 'BTC']);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (user) {
+      setLoading(false);
+      // In a real app, you'd fetch the user's portfolio ID
+      setPortfolioId('default-portfolio');
+      
+      // Enable live market data
+      setIsLiveDataEnabled(true);
+    }
+    
+    return () => {
+      // Cleanup handled by liveMarketService internally
+      if (isLiveDataEnabled) {
+        liveMarketService.disconnect();
+      }
+    };
+  }, [user]);
+  
+  // Update market data with live data
+  useEffect(() => {
+    if (liveMarketData && Array.isArray(liveMarketData)) {
+      const getAssetName = (symbol: string) => {
+        const assetNames: { [key: string]: string } = {
+          'AAPL': 'Apple Inc.',
+          'TSLA': 'Tesla Inc.',
+          'BTC': 'Bitcoin',
+          'ETH': 'Ethereum',
+          'EURUSD': 'Euro/US Dollar'
+        };
+        return assetNames[symbol] || symbol;
+      };
+      
+      const getAssetSector = (symbol: string) => {
+        const sectors: { [key: string]: string } = {
+          'AAPL': 'Technology',
+          'TSLA': 'Automotive',
+          'BTC': 'Cryptocurrency',
+          'ETH': 'Cryptocurrency',
+          'EURUSD': 'Forex'
+        };
+        return sectors[symbol] || 'Unknown';
+      };
+      
+      const getAssetType = (symbol: string): 'stock' | 'crypto' | 'forex' | 'commodity' => {
+        if (['BTC', 'ETH'].includes(symbol)) return 'crypto';
+        if (['EURUSD'].includes(symbol)) return 'forex';
+        return 'stock';
+      };
+      
+      const updatedMarketData = liveMarketData.map(ticker => ({
+        symbol: ticker.symbol,
+        name: getAssetName(ticker.symbol),
+        price: ticker.price,
+        change: ticker.change,
+        changePercent: ticker.changePercent,
+        volume: ticker.volume,
+        marketCap: ticker.marketCap || 0,
+        high24h: ticker.high24h,
+        low24h: ticker.low24h,
+        sector: getAssetSector(ticker.symbol),
+        type: getAssetType(ticker.symbol)
+      }));
+      setMarketData(updatedMarketData);
+    }
+  }, [liveMarketData]);
 
   const selectedAssetData = marketData.find(asset => asset.symbol === selectedAsset);
 
@@ -285,8 +353,9 @@ export default function TradingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
+    <AppLayout>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
@@ -512,7 +581,12 @@ export default function TradingPage() {
                       {['1D', '1W', '1M', '3M', '1Y'].map((period) => (
                         <button
                           key={period}
-                          className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          onClick={() => setSelectedTimeframe(period)}
+                          className={`px-3 py-1 text-xs font-medium rounded ${
+                            selectedTimeframe === period
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`}
                         >
                           {period}
                         </button>
@@ -520,16 +594,27 @@ export default function TradingPage() {
                     </div>
                   </div>
                   
-                  {/* Chart Placeholder */}
-                  <div className="h-80 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="text-center">
-                      <LineChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500 dark:text-gray-400">Interactive chart would go here</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-                        Real-time price data and technical indicators
-                      </p>
-                    </div>
-                  </div>
+                  {/* Live Chart */}
+                   <div className="h-80 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                     {isLiveDataEnabled && selectedAssetData ? (
+                       <LiveChart 
+                         symbol={selectedAsset}
+                         timeframe={selectedTimeframe}
+                         data={selectedAssetData}
+                         isLive={isLiveDataEnabled}
+                       />
+                     ) : (
+                       <div className="h-full flex items-center justify-center">
+                         <div className="text-center">
+                           <LineChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                           <p className="text-gray-500 dark:text-gray-400">Connecting to live market data...</p>
+                           <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+                             Real-time price data and technical indicators
+                           </p>
+                         </div>
+                       </div>
+                     )}
+                   </div>
 
                   {/* Asset Stats */}
                   {selectedAssetData && (
@@ -565,50 +650,84 @@ export default function TradingPage() {
                 </div>
               </div>
 
-              {/* Trading Panel */}
+              {/* Trading Interface */}
               <div className="xl:col-span-1">
                 <div className="space-y-6">
+                  {/* New Trade Button */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <button
+                      onClick={() => {
+                        setOrderQuantity('');
+                        setOrderPrice('');
+                        setOrderType('market');
+                        setOrderSide('buy');
+                        toast.success('Ready to place a new trade!');
+                      }}
+                      className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Trade
+                    </button>
+                  </div>
+                  
                   {/* Order Form */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Place Order</h3>
                     
                     {/* Order Type */}
-                    <div className="flex space-x-1 mb-4">
-                      {['market', 'limit', 'stop'].map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => setOrderType(type as any)}
-                          className={`flex-1 py-2 px-3 text-sm font-medium rounded ${
-                            orderType === type
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          }`}
-                        >
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </button>
-                      ))}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Order Type
+                      </label>
+                      <div className="grid grid-cols-3 gap-2 mb-2">
+                        {[
+                          { value: 'market', label: 'Market', icon: '⚡' },
+                          { value: 'limit', label: 'Limit', icon: '🎯' },
+                          { value: 'stop', label: 'Stop', icon: '🛑' }
+                        ].map((type) => (
+                          <button
+                            key={type.value}
+                            onClick={() => setOrderType(type.value as any)}
+                            className={`py-2 px-3 text-xs font-medium rounded-lg transition-colors flex items-center justify-center ${
+                              orderType === type.value
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            <span className="mr-1">{type.icon}</span>
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                      {orderType === 'market' && selectedAssetData && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                          Market Price: {formatCurrency(selectedAssetData.price, selectedAssetData.type === 'forex' ? 4 : 2)}
+                        </div>
+                      )}
                     </div>
 
                     {/* Buy/Sell Toggle */}
                     <div className="flex space-x-1 mb-4">
                       <button
                         onClick={() => setOrderSide('buy')}
-                        className={`flex-1 py-2 px-3 font-medium rounded ${
+                        className={`flex-1 py-3 px-3 font-medium rounded transition-colors flex items-center justify-center ${
                           orderSide === 'buy'
-                            ? 'bg-green-600 text-white'
+                            ? 'bg-green-600 text-white shadow-lg'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
+                        <TrendingUp className="w-4 h-4 mr-2" />
                         Buy
                       </button>
                       <button
                         onClick={() => setOrderSide('sell')}
-                        className={`flex-1 py-2 px-3 font-medium rounded ${
+                        className={`flex-1 py-3 px-3 font-medium rounded transition-colors flex items-center justify-center ${
                           orderSide === 'sell'
-                            ? 'bg-red-600 text-white'
+                            ? 'bg-red-600 text-white shadow-lg'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
+                        <TrendingDown className="w-4 h-4 mr-2" />
                         Sell
                       </button>
                     </div>
@@ -652,8 +771,20 @@ export default function TradingPage() {
                         value={orderQuantity}
                         onChange={(e) => setOrderQuantity(e.target.value)}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
                       />
+                      {/* Quick Quantity Buttons */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[1, 10, 50, 100].map((qty) => (
+                          <button
+                            key={qty}
+                            onClick={() => setOrderQuantity(qty.toString())}
+                            className="py-1 px-2 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                          >
+                            {qty}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Price (for limit orders) */}
@@ -689,14 +820,51 @@ export default function TradingPage() {
                     <button
                       onClick={handlePlaceOrder}
                       disabled={!orderQuantity || !portfolioId || !selectedBrokerAccount || (orderType !== 'market' && !orderPrice) || isPlacingOrder}
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                      className={`w-full py-4 px-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center justify-center ${
                         orderSide === 'buy'
-                          ? 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white'
-                          : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white'
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:bg-gray-400 text-white shadow-lg'
+                          : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:bg-gray-400 text-white shadow-lg'
                       }`}
                     >
-                      {isPlacingOrder ? 'Placing Order...' : `${orderSide === 'buy' ? 'Buy' : 'Sell'} ${selectedAsset}`}
+                      {isPlacingOrder ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        <>
+                          {orderSide === 'buy' ? <TrendingUp className="w-5 h-5 mr-2" /> : <TrendingDown className="w-5 h-5 mr-2" />}
+                          {orderSide === 'buy' ? 'Buy' : 'Sell'} {selectedAsset}
+                        </>
+                      )}
                     </button>
+                    
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <button
+                        onClick={() => {
+                          setOrderQuantity('');
+                           setOrderPrice('');
+                           toast.success('Order form cleared');
+                        }}
+                        className="py-2 px-3 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                      >
+                        <Minus className="w-4 h-4 mr-1" />
+                        Clear
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (selectedAssetData) {
+                             setOrderPrice(selectedAssetData.price.toString());
+                             toast.success('Price set to market price');
+                           }
+                        }}
+                        className="py-2 px-3 text-sm font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center"
+                      >
+                        <Target className="w-4 h-4 mr-1" />
+                        Market
+                      </button>
+                    </div>
                   </div>
 
                   {/* Order Book */}
@@ -776,6 +944,7 @@ export default function TradingPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

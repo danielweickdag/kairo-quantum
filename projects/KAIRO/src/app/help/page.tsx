@@ -101,6 +101,20 @@ const faqData: FAQItem[] = [
     answer: 'KAIRO supports stocks, ETFs, options, forex, and cryptocurrencies across major global exchanges including NYSE, NASDAQ, LSE, TSE, and more. Market availability depends on your connected broker.',
     category: 'trading',
     helpful: 31
+  },
+  {
+    id: '9',
+    question: 'How does the risk management system work?',
+    answer: 'KAIRO features advanced risk management including portfolio VaR calculation, correlation monitoring, volatility tracking, and real-time risk alerts. The system continuously monitors your portfolio exposure and provides customizable alerts for risk thresholds, helping you protect your investments.',
+    category: 'risk-management',
+    helpful: 28
+  },
+  {
+    id: '10',
+    question: 'What is Value at Risk (VaR) and how is it calculated?',
+    answer: 'Value at Risk (VaR) estimates the potential loss in your portfolio over a specific time period with a given confidence level. KAIRO calculates VaR using advanced statistical models and historical data to help you understand your portfolio\'s risk exposure.',
+    category: 'risk-management',
+    helpful: 22
   }
 ];
 
@@ -139,6 +153,13 @@ const helpCategories: HelpCategory[] = [
     description: 'Account security and data protection',
     icon: Shield,
     articles: 6
+  },
+  {
+    id: 'risk-management',
+    title: 'Risk Management',
+    description: 'Portfolio risk monitoring and VaR analysis',
+    icon: AlertCircle,
+    articles: 5
   },
   {
     id: 'billing',

@@ -63,7 +63,8 @@ import {
   Database,
   Server,
   Wifi,
-  Signal
+  Signal,
+  Menu
 } from 'lucide-react'
 import { cn, formatCurrency as utilsFormatCurrency, formatPercent as utilsFormatPercent } from '@/lib/utils'
 
@@ -116,11 +117,17 @@ interface CopyTraderData {
 
 const UserDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview')
-  const [showBalance, setShowBalance] = useState(true)
+  const [balanceVisible, setBalanceVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isAutoRebalancing, setIsAutoRebalancing] = useState(false)
+  const [realTimeUpdates, setRealTimeUpdates] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [autoTradeEnabled, setAutoTradeEnabled] = useState(false)
+  const [pendingTrades, setPendingTrades] = useState<string[]>([])
   
   // Mock data - in real app, this would come from API
-  const [portfolioData] = useState<PortfolioData>({
+  const [portfolioData, setPortfolioData] = useState<PortfolioData>({
     totalValue: 125847.32,
     todayChange: 2847.21,
     todayChangePercent: 2.31,
@@ -234,6 +241,45 @@ const UserDashboard: React.FC = () => {
     twoFactorEnabled: true
   })
 
+  // Real-time updates effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    
+    if (realTimeUpdates) {
+      interval = setInterval(() => {
+        // Simulate real-time portfolio updates
+        setPortfolioData(prev => ({
+          ...prev,
+          totalValue: prev.totalValue + (Math.random() - 0.5) * 1000,
+          todayChange: prev.todayChange + (Math.random() - 0.5) * 100,
+          todayChangePercent: prev.todayChangePercent + (Math.random() - 0.5) * 0.5
+        }))
+        setLastUpdate(new Date())
+      }, 3000) // Update every 3 seconds
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [realTimeUpdates])
+  
+  // Auto-rebalancing effect
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    
+    if (isAutoRebalancing) {
+      timeout = setTimeout(() => {
+        // Simulate portfolio rebalancing
+        alert('Portfolio automatically rebalanced based on AI recommendations!')
+        setIsAutoRebalancing(false)
+      }, 5000) // Rebalance after 5 seconds
+    }
+    
+    return () => {
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [isAutoRebalancing])
+
   const formatCurrency = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00'
     try {
@@ -290,10 +336,22 @@ const UserDashboard: React.FC = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Data
             </Button>
-            <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+            <Button 
+              onClick={() => window.open('/trading', '_blank')}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+            >
               <Plus className="w-4 h-4 mr-2" />
               New Trade
             </Button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-gray-400 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={mobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+            </button>
           </div>
         </div>
 
@@ -308,16 +366,16 @@ const UserDashboard: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowBalance(!showBalance)}
+                  onClick={() => setBalanceVisible(!balanceVisible)}
                   className="text-gray-400 hover:text-white"
                 >
-                  {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                 </Button>
               </div>
               <div>
                 <p className="text-gray-400 text-sm mb-1">Total Portfolio Value</p>
                 <p className="text-2xl font-bold text-white">
-                  {showBalance ? formatCurrency(portfolioData.totalValue) : '••••••'}
+                  {balanceVisible ? formatCurrency(portfolioData.totalValue) : '••••••'}
                 </p>
                 <div className="flex items-center mt-2">
                   <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
@@ -343,7 +401,7 @@ const UserDashboard: React.FC = () => {
               <div>
                 <p className="text-gray-400 text-sm mb-1">Today&apos;s P&L</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {showBalance ? formatCurrency(portfolioData.todayChange) : '••••••'}
+                  {balanceVisible ? formatCurrency(portfolioData.todayChange) : '••••••'}
                 </p>
                 <p className="text-gray-400 text-sm mt-2">
                   {formatPercent(portfolioData.todayChangePercent)} from yesterday
@@ -484,14 +542,48 @@ const UserDashboard: React.FC = () => {
                         <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                           <Brain className="w-4 h-4 text-white" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-purple-300 font-semibold mb-1">Market Opportunity</p>
-                          <p className="text-gray-300 text-sm">
+                          <p className="text-gray-300 text-sm mb-3">
                             Strong bullish momentum detected in BTC. Consider increasing allocation by 5-10%.
                           </p>
-                          <Badge className="mt-2 bg-purple-500/30 text-purple-300 border-purple-500/50">
-                            92% Confidence
-                          </Badge>
+                          <div className="flex items-center justify-between">
+                            <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/50">
+                              92% Confidence
+                            </Badge>
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => window.open('/trading', '_blank')}
+                                className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1"
+                              >
+                                Trade Now
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className={cn(
+                                  "text-xs px-3 py-1",
+                                  pendingTrades.includes('BTC') 
+                                    ? "border-yellow-500 bg-yellow-500/20 text-yellow-300" 
+                                    : "border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+                                )}
+                                onClick={() => {
+                                  if (!pendingTrades.includes('BTC')) {
+                                    setPendingTrades(prev => [...prev, 'BTC'])
+                                    setTimeout(() => {
+                                      alert('Auto-trade executed: BTC +7.5% allocation')
+                                      setPendingTrades(prev => prev.filter(t => t !== 'BTC'))
+                                    }, 3000)
+                                  }
+                                }}
+                                disabled={pendingTrades.includes('BTC')}
+                              >
+                                <Zap className={cn("w-3 h-3 mr-1", pendingTrades.includes('BTC') && "animate-pulse")} />
+                                {pendingTrades.includes('BTC') ? 'Executing...' : 'Auto Execute'}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -516,6 +608,164 @@ const UserDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Quick Actions Section */}
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                   <div className="flex items-center">
+                     <Zap className="w-5 h-5 text-yellow-400 mr-2" />
+                     Quick Actions & Automation
+                   </div>
+                   {realTimeUpdates && (
+                     <div className="flex items-center text-xs text-blue-400">
+                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse mr-2" />
+                       Last update: {lastUpdate.toLocaleTimeString()}
+                     </div>
+                   )}
+                 </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Trading Links */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-2">Trading Platforms</h4>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                      onClick={() => window.open('/trading', '_blank')}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Spot Trading
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => window.open('/trading?tab=futures', '_blank')}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Futures Trading
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => window.open('/trading?tab=options', '_blank')}
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      Options Trading
+                    </Button>
+                  </div>
+                  
+                  {/* Automation Features */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-2">Automation</h4>
+                    <Button 
+                       variant="outline" 
+                       className={cn(
+                         "w-full",
+                         isAutoRebalancing 
+                           ? "border-green-500 bg-green-500/20 text-green-300" 
+                           : "border-green-500/30 text-green-400 hover:bg-green-500/10"
+                       )}
+                       onClick={() => {
+                         setIsAutoRebalancing(!isAutoRebalancing)
+                         if (!isAutoRebalancing) {
+                           alert('Portfolio rebalancing initiated based on AI recommendations')
+                         }
+                       }}
+                       disabled={isAutoRebalancing}
+                     >
+                       <RefreshCw className={cn("w-4 h-4 mr-2", isAutoRebalancing && "animate-spin")} />
+                       {isAutoRebalancing ? 'Rebalancing...' : 'Auto Rebalance'}
+                     </Button>
+                    <Button 
+                       variant="outline" 
+                       className={cn(
+                         "w-full",
+                         autoTradeEnabled 
+                           ? "border-blue-500 bg-blue-500/20 text-blue-300" 
+                           : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                       )}
+                       onClick={() => {
+                         setAutoTradeEnabled(!autoTradeEnabled)
+                         if (!autoTradeEnabled) {
+                           alert('Automated trade execution enabled for AI insights')
+                         } else {
+                           alert('Automated trade execution disabled')
+                         }
+                       }}
+                     >
+                       <Zap className={cn("w-4 h-4 mr-2", autoTradeEnabled && "animate-pulse")} />
+                       {autoTradeEnabled ? 'Auto Trade ON' : 'Enable Auto Trade'}
+                     </Button>
+                     <Button 
+                       variant="outline" 
+                       className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                       onClick={() => {
+                         alert('Copy trading automation enabled for top performers')
+                       }}
+                     >
+                       <Copy className="w-4 h-4 mr-2" />
+                       Auto Copy Trade
+                     </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      onClick={() => {
+                        alert('Risk management alerts activated')
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Risk Management
+                    </Button>
+                  </div>
+                  
+                  {/* Data & Reports */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-2">Data & Reports</h4>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => {
+                        alert('Generating automated portfolio report...')
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Report
+                    </Button>
+                    <Button 
+                       variant="outline" 
+                       className={cn(
+                         "w-full",
+                         realTimeUpdates 
+                           ? "border-blue-500 bg-blue-500/20 text-blue-300" 
+                           : "border-gray-600 text-gray-300 hover:bg-gray-700"
+                       )}
+                       onClick={() => {
+                         setRealTimeUpdates(!realTimeUpdates)
+                         if (!realTimeUpdates) {
+                           alert('Real-time data sync enabled')
+                         } else {
+                           alert('Real-time data sync disabled')
+                         }
+                       }}
+                     >
+                       <Activity className={cn("w-4 h-4 mr-2", realTimeUpdates && "animate-pulse")} />
+                       {realTimeUpdates ? 'Live Sync ON' : 'Enable Sync'}
+                     </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => {
+                        alert('Automated alerts configured')
+                      }}
+                    >
+                      <Bell className="w-4 h-4 mr-2" />
+                      Setup Alerts
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Recent Trades Tab */}

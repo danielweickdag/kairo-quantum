@@ -73,6 +73,51 @@ const PineScriptEditor: React.FC<PineScriptEditorProps> = ({
     'math.abs', 'math.max', 'math.min', 'math.round', 'math.floor', 'math.ceil'
   ];
 
+  // Syntax highlighting state
+  const [syntaxHighlighting, setSyntaxHighlighting] = useState(true);
+  const [autoComplete, setAutoComplete] = useState(true);
+  const [wordWrap, setWordWrap] = useState(false);
+  const [showAutoComplete, setShowAutoComplete] = useState(false);
+  const [autoCompleteOptions, setAutoCompleteOptions] = useState<string[]>([]);
+  const [autoCompletePosition, setAutoCompletePosition] = useState({ top: 0, left: 0 });
+  const [selectedSuggestion, setSelectedSuggestion] = useState(0);
+
+  // Apply syntax highlighting
+  const applySyntaxHighlighting = (code: string) => {
+    if (!syntaxHighlighting) return code;
+    
+    let highlightedCode = code;
+    
+    // Highlight comments
+    highlightedCode = highlightedCode.replace(
+      /(\/\/.*$)/gm,
+      '<span style="color: #6a9955; font-style: italic;">$1</span>'
+    );
+    
+    // Highlight strings
+    highlightedCode = highlightedCode.replace(
+      /(["'])((?:(?!\1)[^\\]|\\.)*)\1/g,
+      '<span style="color: #ce9178;">$&</span>'
+    );
+    
+    // Highlight numbers
+    highlightedCode = highlightedCode.replace(
+      /\b\d+(\.\d+)?\b/g,
+      '<span style="color: #b5cea8;">$&</span>'
+    );
+    
+    // Highlight Pine Script keywords
+    pineKeywords.forEach(keyword => {
+      const regex = new RegExp(`\\b${keyword.replace('.', '\\.')}\\b`, 'g');
+      highlightedCode = highlightedCode.replace(
+        regex,
+        `<span style="color: #569cd6; font-weight: bold;">${keyword}</span>`
+      );
+    });
+    
+    return highlightedCode;
+  };
+
 
 
   // Validate Pine Script syntax
@@ -128,16 +173,99 @@ const PineScriptEditor: React.FC<PineScriptEditorProps> = ({
     });
     
     setValidationErrors(errors);
-    setIsValidating(false);
+   setIsValidating(false);
   };
 
   // Handle script changes
   const handleScriptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newScript = e.target.value;
     setScript(newScript);
+    validateScript(newScript);
     
-    // Debounced validation
-    setTimeout(() => validateScript(newScript), 500);
+    // Auto-complete logic
+    if (autoComplete) {
+      const cursorPosition = e.target.selectionStart;
+      const textBeforeCursor = newScript.substring(0, cursorPosition);
+      const words = textBeforeCursor.split(/\s+/);
+      const currentWord = words[words.length - 1];
+      
+      if (currentWord.length > 1) {
+        const suggestions = pineKeywords.filter(keyword => 
+          keyword.toLowerCase().startsWith(currentWord.toLowerCase())
+        );
+        
+        if (suggestions.length > 0) {
+          setAutoCompleteOptions(suggestions);
+          setSelectedSuggestion(0);
+          setShowAutoComplete(true);
+          
+          // Calculate position for auto-complete dropdown
+          const textarea = e.target;
+          const rect = textarea.getBoundingClientRect();
+          setAutoCompletePosition({
+            top: rect.top + 20,
+            left: rect.left + 10
+          });
+        } else {
+          setShowAutoComplete(false);
+        }
+      } else {
+        setShowAutoComplete(false);
+      }
+    }
+  };
+  
+  // Handle keyboard events for auto-complete
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showAutoComplete && autoCompleteOptions.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedSuggestion(prev => 
+            prev < autoCompleteOptions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedSuggestion(prev => 
+            prev > 0 ? prev - 1 : autoCompleteOptions.length - 1
+          );
+          break;
+        case 'Tab':
+        case 'Enter':
+          e.preventDefault();
+          insertAutoComplete(autoCompleteOptions[selectedSuggestion]);
+          break;
+        case 'Escape':
+          setShowAutoComplete(false);
+          break;
+      }
+    }
+  };
+  
+  // Insert auto-complete suggestion
+  const insertAutoComplete = (suggestion: string) => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const cursorPosition = textarea.selectionStart;
+    const textBeforeCursor = script.substring(0, cursorPosition);
+    const textAfterCursor = script.substring(cursorPosition);
+    const words = textBeforeCursor.split(/\s+/);
+    const currentWord = words[words.length - 1];
+    
+    const newText = textBeforeCursor.substring(0, textBeforeCursor.length - currentWord.length) + 
+                   suggestion + textAfterCursor;
+    
+    setScript(newText);
+    setShowAutoComplete(false);
+    
+    // Set cursor position after the inserted suggestion
+    setTimeout(() => {
+      const newCursorPosition = cursorPosition - currentWord.length + suggestion.length;
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      textarea.focus();
+    }, 0);
   };
 
   // Save script
@@ -278,14 +406,63 @@ const PineScriptEditor: React.FC<PineScriptEditorProps> = ({
           
           {/* Code editor */}
           <div className="flex-1 relative">
+            {/* Syntax highlighting overlay */}
+            {syntaxHighlighting && (
+              <div 
+                className="absolute inset-0 p-4 font-mono text-sm pointer-events-none overflow-hidden whitespace-pre-wrap break-words"
+                style={{
+                  color: 'transparent',
+                  zIndex: 1,
+                  wordWrap: wordWrap ? 'break-word' : 'normal'
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: applySyntaxHighlighting(script)
+                }}
+              />
+            )}
             <textarea
               ref={textareaRef}
               value={script}
               onChange={handleScriptChange}
-              className="w-full h-full p-4 font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-none outline-none resize-none"
+              onKeyDown={handleKeyDown}
+              className={`w-full h-full p-4 font-mono text-sm border-none outline-none resize-none relative z-10 ${
+                syntaxHighlighting 
+                  ? 'bg-transparent text-transparent caret-gray-900 dark:caret-white' 
+                  : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white'
+              }`}
+              style={{
+                wordWrap: wordWrap ? 'break-word' : 'normal',
+                whiteSpace: wordWrap ? 'pre-wrap' : 'pre'
+              }}
               placeholder="Enter your Pine Script code here..."
               spellCheck={false}
             />
+            
+            {/* Auto-complete dropdown */}
+            {showAutoComplete && autoCompleteOptions.length > 0 && (
+              <div 
+                className="absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto"
+                style={{
+                  top: autoCompletePosition.top,
+                  left: autoCompletePosition.left,
+                  minWidth: '200px'
+                }}
+              >
+                {autoCompleteOptions.map((option, index) => (
+                  <div
+                    key={option}
+                    className={`px-3 py-2 cursor-pointer text-sm ${
+                      index === selectedSuggestion
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
+                        : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={() => insertAutoComplete(option)}
+                  >
+                    <span className="font-mono">{option}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -339,7 +516,34 @@ const PineScriptEditor: React.FC<PineScriptEditorProps> = ({
                     </span>
                   </label>
                   <label className="flex items-center">
-                    <input type="checkbox" className="mr-2" />
+                    <input 
+                      type="checkbox" 
+                      className="mr-2" 
+                      checked={syntaxHighlighting}
+                      onChange={(e) => setSyntaxHighlighting(e.target.checked)}
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Syntax highlighting
+                    </span>
+                  </label>
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="mr-2" 
+                      checked={autoComplete}
+                      onChange={(e) => setAutoComplete(e.target.checked)}
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Auto-complete
+                    </span>
+                  </label>
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="mr-2" 
+                      checked={wordWrap}
+                      onChange={(e) => setWordWrap(e.target.checked)}
+                    />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Word wrap
                     </span>

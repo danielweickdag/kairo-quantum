@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, CheckIcon, PlusIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 interface BrokerAccount {
   id: string;
@@ -37,6 +38,7 @@ export default function BrokerAccountSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     fetchBrokerAccounts();
@@ -47,8 +49,14 @@ export default function BrokerAccountSelector({
       setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        // User is not authenticated, set empty accounts and return
+        setIsAuthenticated(false);
+        setAccounts([]);
+        setLoading(false);
+        return;
       }
+      
+      setIsAuthenticated(true);
 
       const response = await fetch('/api/brokers/accounts', {
         headers: {
@@ -132,9 +140,23 @@ export default function BrokerAccountSelector({
   if (accounts.length === 0) {
     return (
       <div className={`relative ${className}`}>
-        <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-          No broker accounts found. Please connect a broker first.
-        </div>
+        {isAuthenticated ? (
+          <div className="space-y-3">
+            <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-center">
+              No broker accounts found. Please connect a broker first.
+            </div>
+            <Link href="/brokers">
+              <button className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Connect Broker
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-center">
+            Please log in to view broker accounts.
+          </div>
+        )}
       </div>
     );
   }

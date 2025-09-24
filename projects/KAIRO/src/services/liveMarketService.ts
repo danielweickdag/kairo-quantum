@@ -71,9 +71,12 @@ class LiveMarketService {
 
   // Supported trading pairs
   private readonly SUPPORTED_SYMBOLS = [
+    // Cryptocurrencies
     'BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT', 'LINKUSDT',
     'MATICUSDT', 'AVAXUSDT', 'ATOMUSDT', 'NEARUSDT', 'FTMUSDT', 'SANDUSDT',
-    'MANAUSDT', 'CHZUSDT', 'ENJUSDT', 'GALAUSDT'
+    'MANAUSDT', 'CHZUSDT', 'ENJUSDT', 'GALAUSDT',
+    // Major Indices
+    'SPY', 'QQQ', 'DJI', 'IXIC', 'RUT', 'VTI', 'IWM'
   ];
 
   constructor() {
@@ -84,6 +87,7 @@ class LiveMarketService {
   // Initialize mock market data
   private initializeMarketData(): void {
     const baseData = {
+      // Cryptocurrencies
       BTCUSDT: { basePrice: 45000, volatility: 0.02 },
       ETHUSDT: { basePrice: 2800, volatility: 0.025 },
       ADAUSDT: { basePrice: 0.45, volatility: 0.03 },
@@ -99,7 +103,15 @@ class LiveMarketService {
       MANAUSDT: { basePrice: 0.42, volatility: 0.037 },
       CHZUSDT: { basePrice: 0.089, volatility: 0.04 },
       ENJUSDT: { basePrice: 0.28, volatility: 0.035 },
-      GALAUSDT: { basePrice: 0.035, volatility: 0.042 }
+      GALAUSDT: { basePrice: 0.035, volatility: 0.042 },
+      // Major Indices
+      SPY: { basePrice: 428.50, volatility: 0.015 },
+      QQQ: { basePrice: 365.20, volatility: 0.018 },
+      DJI: { basePrice: 37689.54, volatility: 0.012 },
+      IXIC: { basePrice: 14845.73, volatility: 0.020 },
+      RUT: { basePrice: 2045.32, volatility: 0.025 },
+      VTI: { basePrice: 245.30, volatility: 0.014 },
+      IWM: { basePrice: 198.75, volatility: 0.022 }
     };
 
     this.SUPPORTED_SYMBOLS.forEach(symbol => {

@@ -367,3 +367,8 @@
 2025-09-19 16:51:17:5117 [32minfo[39m: [32m📊 Environment: development[39m
 2025-09-19 16:51:17:5117 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
 2025-09-19 16:51:17:5117 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-24 15:25:24:2524 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-24 15:25:24:2524 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-24 15:25:24:2524 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-24 15:25:24:2524 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-24 16:03:17:317 [31merror[39m: [31mNot Found - /api/stripe/sync[39m

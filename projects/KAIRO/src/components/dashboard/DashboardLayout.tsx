@@ -23,6 +23,7 @@ import {
   Star
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
+import QuickTradeModal from '@/components/modals/QuickTradeModal';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -97,6 +98,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [quickTradeModalOpen, setQuickTradeModalOpen] = useState(false);
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => 
@@ -311,7 +313,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
               
               {/* Quick Trade Button */}
-              <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
+              <button 
+                onClick={() => setQuickTradeModalOpen(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
                 Quick Trade
               </button>
             </div>
@@ -323,6 +328,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Quick Trade Modal */}
+      <QuickTradeModal 
+        isOpen={quickTradeModalOpen} 
+        onClose={() => setQuickTradeModalOpen(false)} 
+      />
     </div>
   );
 }

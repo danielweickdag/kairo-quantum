@@ -100,15 +100,21 @@ const LandingPage: React.FC = () => {
       gradient: "from-purple-500 to-pink-500"
     },
     {
+      icon: <Shield className="w-8 h-8" />,
+      title: "Advanced Risk Management",
+      description: "Comprehensive portfolio VaR calculation, correlation monitoring, volatility tracking, and real-time risk alerts to protect your investments.",
+      gradient: "from-red-500 to-orange-500"
+    },
+    {
       icon: <Users className="w-8 h-8" />,
       title: "Copy Trading Network",
       description: "Follow and copy successful traders automatically. Mirror their strategies and benefit from their expertise.",
       gradient: "from-blue-500 to-cyan-500"
     },
     {
-      icon: <Shield className="w-8 h-8" />,
-      title: "Enterprise Security",
-      description: "Bank-grade encryption, SIPC insurance up to $500K, and SEC regulation ensure your investments are protected.",
+      icon: <PieChart className="w-8 h-8" />,
+      title: "Portfolio Analytics",
+      description: "Deep portfolio insights with Sharpe ratio analysis, drawdown monitoring, and performance attribution across all asset classes.",
       gradient: "from-green-500 to-emerald-500"
     },
     {
@@ -118,10 +124,16 @@ const LandingPage: React.FC = () => {
       gradient: "from-yellow-500 to-orange-500"
     },
     {
+      icon: <AlertTriangle className="w-8 h-8" />,
+      title: "Real-Time Risk Alerts",
+      description: "Intelligent risk monitoring with customizable alerts for volatility spikes, correlation changes, and portfolio exposure limits.",
+      gradient: "from-indigo-500 to-purple-500"
+    },
+    {
       icon: <BarChart3 className="w-8 h-8" />,
       title: "Advanced Analytics",
       description: "Comprehensive portfolio analytics, risk management tools, and performance tracking with detailed insights.",
-      gradient: "from-indigo-500 to-purple-500"
+      gradient: "from-cyan-500 to-blue-500"
     },
     {
       icon: <Globe className="w-8 h-8" />,
@@ -242,8 +254,8 @@ const LandingPage: React.FC = () => {
           </h1>
           
           <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Join over 1 million traders using KAIRO&apos;s advanced AI algorithms to maximize profits, 
-            minimize risks, and automate their trading strategies across global markets.
+            Join over 1 million traders using KAIRO&apos;s advanced AI algorithms and comprehensive risk management system to maximize profits, 
+            minimize risks, and automate their trading strategies with real-time portfolio analytics and VaR monitoring.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -319,7 +331,7 @@ const LandingPage: React.FC = () => {
               </span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Experience the next generation of trading with our comprehensive suite of AI-powered tools and features.
+              Experience the next generation of trading with our comprehensive suite of AI-powered tools, advanced risk management, and real-time portfolio analytics.
             </p>
           </div>
           

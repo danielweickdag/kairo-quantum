@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -21,6 +21,7 @@ import {
   Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMarketData } from '@/services/liveMarketService';
 
 interface MarketData {
   symbol: string;
@@ -30,13 +31,30 @@ interface MarketData {
   isPositive: boolean;
 }
 
-const mockMarketData: MarketData[] = [
-  { symbol: 'SPY', price: '428.50', change: '+2.15', changePercent: '+0.50%', isPositive: true },
-  { symbol: 'QQQ', price: '365.20', change: '-1.80', changePercent: '-0.49%', isPositive: false },
-  { symbol: 'BTC', price: '43,250', change: '+850', changePercent: '+2.01%', isPositive: true },
-  { symbol: 'ETH', price: '2,580', change: '+45', changePercent: '+1.77%', isPositive: true },
-  { symbol: 'TSLA', price: '248.50', change: '-3.20', changePercent: '-1.27%', isPositive: false },
-];
+// Get live market data and convert to header format
+function useLiveMarketDataForHeader(): MarketData[] {
+  const liveData = useMarketData();
+  
+  return useMemo(() => {
+    if (!Array.isArray(liveData)) return [];
+    
+    const headerSymbols = ['SPY', 'QQQ', 'BTCUSDT', 'ETHUSDT'];
+    const symbolMap = {
+      'BTCUSDT': 'BTC',
+      'ETHUSDT': 'ETH'
+    };
+    
+    return liveData
+      .filter(item => headerSymbols.includes(item.symbol))
+      .map(item => ({
+        symbol: symbolMap[item.symbol as keyof typeof symbolMap] || item.symbol,
+        price: item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        change: (item.change >= 0 ? '+' : '') + item.change.toFixed(2),
+        changePercent: (item.changePercent >= 0 ? '+' : '') + item.changePercent.toFixed(2) + '%',
+        isPositive: item.change >= 0
+      }));
+  }, [liveData]);
+}
 
 export default function TradingViewHeader() {
   const { user, logout } = useAuth();
@@ -45,6 +63,15 @@ export default function TradingViewHeader() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const liveMarketData = useLiveMarketDataForHeader();
+  const [marketData, setMarketData] = useState<MarketData[]>([]);
+
+  // Update market data when live data changes
+  useEffect(() => {
+    if (liveMarketData.length > 0) {
+      setMarketData(liveMarketData);
+    }
+  }, [liveMarketData]);
 
   const handleLogout = () => {
     logout();
@@ -72,7 +99,7 @@ export default function TradingViewHeader() {
 
         {/* Market Data Ticker */}
         <div className="hidden lg:flex items-center space-x-4">
-          {mockMarketData.map((item) => (
+          {marketData.map((item) => (
             <div key={item.symbol} className="flex items-center space-x-2 text-sm">
               <span className="text-muted-foreground font-medium">{item.symbol}</span>
               <span className="text-foreground font-semibold">{item.price}</span>

@@ -12,6 +12,7 @@ import {
   Clock,
   RefreshCw
 } from 'lucide-react';
+import { liveMarketService, useMarketData } from '@/services/liveMarketService';
 
 interface MarketIndex {
   symbol: string;
@@ -42,8 +43,59 @@ export default function MarketDataWidget() {
   const [activeTab, setActiveTab] = useState<'indices' | 'crypto' | 'forex'>('indices');
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [marketIndices] = useState<MarketIndex[]>([
+  
+  // Get live market data
+  const liveData = useMarketData();
+  
+  // Convert live data to component format
+  const getMarketIndices = (): MarketIndex[] => {
+    const indicesSymbols = ['SPY', 'QQQ', 'DJI', 'IXIC', 'RUT'];
+    const indicesNames = {
+      SPY: 'S&P 500 ETF',
+      QQQ: 'NASDAQ ETF', 
+      DJI: 'Dow Jones',
+      IXIC: 'NASDAQ',
+      RUT: 'Russell 2000'
+    };
+    
+    if (!Array.isArray(liveData)) return [];
+    
+    return liveData
+      .filter(item => indicesSymbols.includes(item.symbol))
+      .map(item => ({
+        symbol: item.symbol,
+        name: indicesNames[item.symbol as keyof typeof indicesNames] || item.symbol,
+        price: item.price,
+        change: item.change,
+        changePercent: item.changePercent,
+        volume: `${(item.volume / 1000000).toFixed(1)}M`
+      }));
+  };
+  
+  const getCryptoData = (): CryptoData[] => {
+    const cryptoSymbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT'];
+    const cryptoNames = {
+      BTCUSDT: 'Bitcoin',
+      ETHUSDT: 'Ethereum',
+      SOLUSDT: 'Solana',
+      ADAUSDT: 'Cardano'
+    };
+    
+    if (!Array.isArray(liveData)) return [];
+    
+    return liveData
+      .filter(item => cryptoSymbols.includes(item.symbol))
+      .map(item => ({
+        symbol: item.symbol.replace('USDT', ''),
+        name: cryptoNames[item.symbol as keyof typeof cryptoNames] || item.symbol,
+        price: item.price,
+        change: item.change,
+        changePercent: item.changePercent,
+        marketCap: item.marketCap ? `${(item.marketCap / 1000000000).toFixed(1)}B` : 'N/A'
+      }));
+  };
+  
+  const [marketIndices, setMarketIndices] = useState<MarketIndex[]>([
     {
       symbol: 'SPX',
       name: 'S&P 500',
@@ -78,7 +130,7 @@ export default function MarketDataWidget() {
     }
   ]);
 
-  const [cryptoData] = useState<CryptoData[]>([
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([
     {
       symbol: 'BTC',
       name: 'Bitcoin',
@@ -113,7 +165,7 @@ export default function MarketDataWidget() {
     }
   ]);
 
-  const [forexData] = useState<ForexPair[]>([
+  const [forexData, setForexData] = useState<ForexPair[]>([
     {
       pair: 'EUR/USD',
       price: 1.0876,
@@ -140,10 +192,18 @@ export default function MarketDataWidget() {
     }
   ]);
 
+  // Update data when live data changes
+  useEffect(() => {
+    if (liveData) {
+      setMarketIndices(getMarketIndices());
+      setCryptoData(getCryptoData());
+      setLastUpdate(new Date());
+    }
+  }, [liveData]);
+  
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Force refresh of live data
     setLastUpdate(new Date());
     setIsRefreshing(false);
   };
