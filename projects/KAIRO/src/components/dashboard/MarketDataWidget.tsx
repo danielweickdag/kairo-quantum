@@ -41,7 +41,7 @@ interface ForexPair {
 
 export default function MarketDataWidget() {
   const [activeTab, setActiveTab] = useState<'indices' | 'crypto' | 'forex'>('indices');
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Get live market data
@@ -192,6 +192,11 @@ export default function MarketDataWidget() {
     }
   ]);
 
+  // Initialize lastUpdate on client side only to prevent hydration mismatch
+  useEffect(() => {
+    setLastUpdate(new Date());
+  }, []);
+
   // Update data when live data changes
   useEffect(() => {
     if (liveData) {
@@ -232,7 +237,7 @@ export default function MarketDataWidget() {
             <div className="flex items-center space-x-2 mt-1">
               <Clock className="h-4 w-4 text-gray-400" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Last updated: {formatTime(lastUpdate)}
+                Last updated: {lastUpdate ? formatTime(lastUpdate) : 'Loading...'}
               </span>
             </div>
           </div>

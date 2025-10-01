@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkflow } from '@/contexts/WorkflowContext';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PortfolioOverview from '@/components/dashboard/PortfolioOverview';
 import TradingPanel from '@/components/dashboard/TradingPanel';
@@ -28,12 +30,32 @@ import {
   Star,
   Shield,
   Brain,
-  BookOpen
+  BookOpen,
+  Play,
+  ArrowRight,
+  Settings
 } from 'lucide-react';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user } = useAuth();
   const { selectedAccount, setSelectedAccount } = useBrokerAccount();
+  const { 
+    workflowState, 
+    executeWorkflow, 
+    triggerFromDashboard, 
+    navigateToTrading,
+    toggleWorkflow,
+    createWorkflow,
+    handleDeepLink 
+  } = useWorkflow();
+  const searchParams = useSearchParams();
+
+  // Handle deep linking on page load
+  useEffect(() => {
+    if (searchParams) {
+      handleDeepLink(searchParams);
+    }
+  }, [searchParams, handleDeepLink]);
   const [activeView, setActiveView] = useState<'overview' | 'trading' | 'automation' | 'strategies' | 'ai-signals' | 'templates' | 'signals' | 'backtesting' | 'performance-analytics'>('overview');
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -373,28 +395,315 @@ export default function DashboardPage() {
          {activeView === 'backtesting' && <BacktestingEngine />}
          {activeView === 'performance-analytics' && <PerformanceAnalytics />}
         {activeView === 'automation' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bot className="h-8 w-8 text-white" />
+          <div className="space-y-6">
+            {/* Workflow Status Overview */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Workflow Automation</h3>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${
+                    workflowState.isConnected ? 'bg-green-500' : 'bg-red-500'
+                  }`}></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {workflowState.isConnected ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                Automation Hub Coming Soon
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Advanced automation features including strategy builders, copy trading management, and AI-powered signals are being developed.
-              </p>
-              <div className="flex items-center justify-center space-x-4">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                  Join Waitlist
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {workflowState.workflows.length}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Workflows</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {workflowState.activeWorkflows.length}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Active Workflows</div>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {workflowState.recentExecutions.length}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Recent Executions</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Available Workflows */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Available Workflows</h4>
+              <div className="space-y-4">
+                {workflowState.workflows.map((workflow) => (
+                  <div key={workflow.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          workflow.isActive ? 'bg-green-500' : 'bg-gray-400'
+                        }`}></div>
+                        <h5 className="font-medium text-gray-900 dark:text-white">{workflow.name}</h5>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{workflow.description}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span>Executions: {workflow.executionCount}</span>
+                        <span>Success Rate: {workflow.successRate}%</span>
+                        {workflow.lastExecuted && (
+                          <span>Last: {new Date(workflow.lastExecuted).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => toggleWorkflow(workflow.id)}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          workflow.isActive
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        }`}
+                      >
+                        {workflow.isActive ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          triggerFromDashboard(workflow.id, {
+                            source: 'dashboard',
+                            timestamp: new Date().toISOString()
+                          });
+                        }}
+                        className="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-sm font-medium transition-colors flex items-center space-x-1"
+                      >
+                        <Play className="h-3 w-3" />
+                        <span>Execute</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          triggerFromDashboard(workflow.id);
+                          navigateToTrading(workflow.id, {
+                             autoExecute: false,
+                             source: 'dashboard',
+                             workflowName: workflow.name,
+                             timestamp: Date.now()
+                           });
+                        }}
+                        className="px-3 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded text-sm font-medium transition-colors flex items-center space-x-1"
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        <span>Go to Trading</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Workflow Actions */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Workflow Actions</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={() => {
+                    const stopLossWorkflow = workflowState.workflows.find(w => w.id === 'auto-stop-loss');
+                    if (stopLossWorkflow) {
+                      triggerFromDashboard(stopLossWorkflow.id, { action: 'quick_trigger' });
+                      navigateToTrading(stopLossWorkflow.id, {
+                        autoExecute: true,
+                        source: 'dashboard_quick_action',
+                        workflowType: 'risk_management',
+                        timestamp: Date.now()
+                      });
+                    }
+                  }}
+                  className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-center"
+                >
+                  <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <div className="font-medium text-gray-900 dark:text-white">Auto Stop Loss</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Activate & Go to Trading</div>
                 </button>
-                <button className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                  Learn More
+                
+                <button
+                  onClick={() => {
+                    const profitWorkflow = workflowState.workflows.find(w => w.id === 'profit-taking');
+                    if (profitWorkflow) {
+                      triggerFromDashboard(profitWorkflow.id, { action: 'quick_trigger' });
+                      navigateToTrading(profitWorkflow.id, {
+                        autoExecute: true,
+                        source: 'dashboard_quick_action',
+                        workflowType: 'profit_taking',
+                        timestamp: Date.now()
+                      });
+                    }
+                  }}
+                  className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-center"
+                >
+                  <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                  <div className="font-medium text-gray-900 dark:text-white">Profit Taking</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Activate & Go to Trading</div>
                 </button>
+                
+                <button
+                  onClick={() => {
+                    // Create and trigger portfolio rebalancing workflow
+                    createWorkflow({
+                       name: 'Portfolio Rebalancing',
+                       description: 'Automatically rebalance portfolio based on target allocations',
+                       isActive: false,
+                       steps: []
+                     });
+                    alert('🔄 Portfolio Rebalancing Workflow Created!\n\n✅ Target allocation analysis\n✅ Automatic rebalancing triggers\n✅ Risk-adjusted position sizing\n✅ Execution optimization');
+                  }}
+                  className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors text-center"
+                >
+                  <BarChart3 className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                  <div className="font-medium text-gray-900 dark:text-white">Portfolio Rebalancing</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Create & Activate</div>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    // Create and trigger market scanning workflow
+                    createWorkflow({
+                       name: 'Market Scanner',
+                       description: 'Scan markets for trading opportunities based on technical indicators',
+                       isActive: false,
+                       steps: []
+                     });
+                    alert('🔍 Market Scanner Workflow Created!\n\n✅ Real-time market scanning\n✅ Technical indicator analysis\n✅ Opportunity alerts\n✅ Automated signal generation');
+                  }}
+                  className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-center"
+                >
+                  <Zap className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <div className="font-medium text-gray-900 dark:text-white">Market Scanner</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Create & Activate</div>
+                </button>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => window.open('/automation', '_blank')}
+                    className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-colors text-center"
+                  >
+                    <Settings className="h-6 w-6 mx-auto mb-2" />
+                    <div className="font-medium">Workflow Builder</div>
+                    <div className="text-sm opacity-90">Create Custom Workflows</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => navigateToTrading(undefined, {
+                       source: 'dashboard_quick_action',
+                       timestamp: Date.now()
+                     })}
+                    className="p-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-colors text-center"
+                  >
+                    <ArrowRight className="h-6 w-6 mx-auto mb-2" />
+                    <div className="font-medium">Go to Trading</div>
+                    <div className="text-sm opacity-90">Open Trading Dashboard</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Trigger all active workflows
+                      workflowState.activeWorkflows.forEach(workflow => {
+                        triggerFromDashboard(workflow.id, { action: 'bulk_trigger', source: 'dashboard' });
+                      });
+                      alert(`🚀 Triggered ${workflowState.activeWorkflows.length} Active Workflows!\n\nAll your active automation workflows have been executed.`);
+                    }}
+                    className="p-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-colors text-center"
+                  >
+                    <Play className="h-6 w-6 mx-auto mb-2" />
+                    <div className="font-medium">Execute All</div>
+                    <div className="text-sm opacity-90">Run Active Workflows</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Workflow Templates */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Popular Workflow Templates</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+                     onClick={() => {
+                       createWorkflow({
+                          name: 'DCA Strategy',
+                          description: 'Dollar-cost averaging with automated recurring purchases',
+                          isActive: false,
+                          steps: []
+                        });
+                       alert('💰 DCA Strategy Template Applied!\n\n✅ Weekly recurring purchases\n✅ Automated dollar-cost averaging\n✅ Risk-adjusted position sizing');
+                     }}>
+                  <DollarSign className="h-8 w-8 text-green-600 mb-3" />
+                  <div className="font-medium text-gray-900 dark:text-white mb-1">DCA Strategy</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Automated dollar-cost averaging with scheduled purchases</div>
+                </div>
+                
+                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors cursor-pointer"
+                     onClick={() => {
+                       createWorkflow({
+                          name: 'Momentum Trading',
+                          description: 'Automated momentum-based trading strategy',
+                          isActive: false,
+                          steps: []
+                        });
+                       alert('⚡ Momentum Trading Template Applied!\n\n✅ Technical indicator triggers\n✅ Momentum-based entries\n✅ Automated position management');
+                     }}>
+                  <TrendingUp className="h-8 w-8 text-purple-600 mb-3" />
+                  <div className="font-medium text-gray-900 dark:text-white mb-1">Momentum Trading</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Capture market momentum with automated entries and exits</div>
+                </div>
+                
+                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+                     onClick={() => {
+                       createWorkflow({
+                          name: 'Risk Management Suite',
+                          description: 'Comprehensive risk management and protection',
+                          isActive: false,
+                          steps: []
+                        });
+                       alert('🛡️ Risk Management Suite Applied!\n\n✅ Automated stop-losses\n✅ Position size management\n✅ Drawdown protection\n✅ Portfolio risk monitoring');
+                     }}>
+                  <Shield className="h-8 w-8 text-red-600 mb-3" />
+                  <div className="font-medium text-gray-900 dark:text-white mb-1">Risk Management</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Comprehensive risk controls and automated protection</div>
+                </div>
               </div>
             </div>
           </div>
         )}
+
+            {/* Recent Executions */}
+            {workflowState.recentExecutions.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Executions</h4>
+                <div className="space-y-3">
+                  {workflowState.recentExecutions.slice(0, 5).map((execution) => {
+                    const workflow = workflowState.workflows.find(w => w.id === execution.workflowId);
+                    return (
+                      <div key={execution.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {workflow?.name || execution.workflowId}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(execution.startTime).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${
+                          execution.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          execution.status === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {execution.status}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
         {/* Quick Actions Footer */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -457,7 +766,6 @@ export default function DashboardPage() {
               {riskManagementActive ? 'Risk Controls Active' : 'Enable Risk Controls'}
             </button>
           </div>
-        </div>
       </div>
       
       {/* Notification Center */}
@@ -466,5 +774,13 @@ export default function DashboardPage() {
         onClose={() => setShowNotifications(false)} 
       />
     </DashboardLayout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

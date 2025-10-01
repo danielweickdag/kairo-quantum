@@ -24,7 +24,7 @@ import {
   PieChart,
   DollarSign
 } from 'lucide-react';
-import TradingViewHeader from '../TradingViewHeader';
+import LandingHeader from '@/components/landing/LandingHeader';
 
 interface MarketData {
   symbol: string;
@@ -125,7 +125,7 @@ export default function TradingViewLanding() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <TradingViewHeader />
+      <LandingHeader />
       
       {/* Hero Section */}
       <section className="px-4 py-12 max-w-7xl mx-auto">

@@ -1,15 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/login/page": "app/login/page.js",
+  "/automation/webhooks/page": "app/automation/webhooks/page.js",
   "/page": "app/page.js",
-  "/settings/page": "app/settings/page.js",
-  "/trading/futures/page": "app/trading/futures/page.js",
-  "/trading/live/page": "app/trading/live/page.js",
-  "/trading/market-updates/page": "app/trading/market-updates/page.js",
-  "/trading/options/page": "app/trading/options/page.js",
-  "/trading/page": "app/trading/page.js",
-  "/trading/pine-editor/page": "app/trading/pine-editor/page.js",
-  "/trading/profit-targets/page": "app/trading/profit-targets/page.js",
+  "/pricing/page": "app/pricing/page.js",
   "/user-dashboard/page": "app/user-dashboard/page.js"
 }

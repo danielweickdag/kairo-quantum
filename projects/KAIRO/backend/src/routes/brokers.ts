@@ -325,8 +325,157 @@ router.get('/supported', (req, res) => {
         supportsSandbox: true,
         documentationUrl: 'https://alpaca.markets/docs/'
       }
+    },
+    {
+      type: BrokerType.INTERACTIVE_BROKERS,
+      name: 'Interactive Brokers',
+      description: 'Professional trading platform with global markets',
+      logoUrl: '/images/brokers/interactive-brokers.png',
+      isEnabled: true,
+      capabilities: {
+        supportsStocks: true,
+        supportsOptions: true,
+        supportsCrypto: true,
+        supportsForex: true,
+        supportsFractionalShares: false,
+        supportsMarginTrading: true,
+        supportsShortSelling: true,
+        supportsRealTimeData: true,
+        supportsHistoricalData: true,
+        supportsOrderTypes: ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT', 'TRAIL'],
+        commissionStructure: {
+          stocks: 0.005,
+          crypto: 0.18
+        }
+      },
+      authConfig: {
+        requiresApiKey: true,
+        requiresApiSecret: true,
+        requiresAccessToken: false,
+        supportsSandbox: true,
+        documentationUrl: 'https://interactivebrokers.github.io/'
+      }
+    },
+    {
+      type: BrokerType.TD_AMERITRADE,
+      name: 'TD Ameritrade',
+      description: 'Full-service brokerage with advanced tools',
+      logoUrl: '/images/brokers/td-ameritrade.png',
+      isEnabled: true,
+      capabilities: {
+        supportsStocks: true,
+        supportsOptions: true,
+        supportsCrypto: false,
+        supportsForex: true,
+        supportsFractionalShares: false,
+        supportsMarginTrading: true,
+        supportsShortSelling: true,
+        supportsRealTimeData: true,
+        supportsHistoricalData: true,
+        supportsOrderTypes: ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT'],
+        commissionStructure: {
+          stocks: 0,
+          crypto: 0
+        }
+      },
+      authConfig: {
+        requiresApiKey: true,
+        requiresApiSecret: false,
+        requiresAccessToken: true,
+        supportsSandbox: true,
+        documentationUrl: 'https://developer.tdameritrade.com/'
+      }
+    },
+    {
+      type: BrokerType.ROBINHOOD,
+      name: 'Robinhood',
+      description: 'Commission-free mobile-first trading',
+      logoUrl: '/images/brokers/robinhood.png',
+      isEnabled: false,
+      capabilities: {
+        supportsStocks: true,
+        supportsOptions: true,
+        supportsCrypto: true,
+        supportsForex: false,
+        supportsFractionalShares: true,
+        supportsMarginTrading: true,
+        supportsShortSelling: false,
+        supportsRealTimeData: true,
+        supportsHistoricalData: true,
+        supportsOrderTypes: ['MARKET', 'LIMIT'],
+        commissionStructure: {
+          stocks: 0,
+          crypto: 0
+        }
+      },
+      authConfig: {
+        requiresApiKey: false,
+        requiresApiSecret: false,
+        requiresAccessToken: true,
+        supportsSandbox: false,
+        documentationUrl: 'https://robinhood.com/us/en/support/'
+      }
+    },
+    {
+      type: BrokerType.SCHWAB,
+      name: 'Charles Schwab',
+      description: 'Comprehensive investment services',
+      logoUrl: '/images/brokers/schwab.png',
+      isEnabled: true,
+      capabilities: {
+        supportsStocks: true,
+        supportsOptions: true,
+        supportsCrypto: false,
+        supportsForex: true,
+        supportsFractionalShares: true,
+        supportsMarginTrading: true,
+        supportsShortSelling: true,
+        supportsRealTimeData: true,
+        supportsHistoricalData: true,
+        supportsOrderTypes: ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT'],
+        commissionStructure: {
+          stocks: 0,
+          crypto: 0
+        }
+      },
+      authConfig: {
+        requiresApiKey: true,
+        requiresApiSecret: true,
+        requiresAccessToken: false,
+        supportsSandbox: true,
+        documentationUrl: 'https://developer.schwab.com/'
+      }
+    },
+    {
+      type: BrokerType.ETRADE,
+      name: 'E*TRADE',
+      description: 'Online trading and investment platform',
+      logoUrl: '/images/brokers/etrade.png',
+      isEnabled: true,
+      capabilities: {
+        supportsStocks: true,
+        supportsOptions: true,
+        supportsCrypto: false,
+        supportsForex: true,
+        supportsFractionalShares: false,
+        supportsMarginTrading: true,
+        supportsShortSelling: true,
+        supportsRealTimeData: true,
+        supportsHistoricalData: true,
+        supportsOrderTypes: ['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT'],
+        commissionStructure: {
+          stocks: 0,
+          crypto: 0
+        }
+      },
+      authConfig: {
+        requiresApiKey: true,
+        requiresApiSecret: true,
+        requiresAccessToken: true,
+        supportsSandbox: true,
+        documentationUrl: 'https://developer.etrade.com/'
+      }
     }
-    // Add other brokers here as they are implemented
   ];
 
   res.json({ success: true, data: supportedBrokers });

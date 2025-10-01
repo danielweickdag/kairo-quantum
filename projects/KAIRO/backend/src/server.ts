@@ -22,6 +22,7 @@ import backtestingRoutes from './routes/backtesting';
 import liveTradingRoutes from './routes/liveTrading';
 import brokerRoutes from './routes/brokers';
 import monitoringRoutes from './routes/monitoring';
+import webhookRoutes from './routes/webhooks';
 import { getBrokerMonitoringService } from './services/BrokerMonitoringService';
 
 // Import middleware
@@ -90,6 +91,7 @@ app.use('/api/backtesting', backtestingRoutes);
 app.use('/api/live-trading', authenticateToken, liveTradingRoutes);
 app.use('/api/brokers', brokerRoutes);
 app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Error handling middleware
 app.use(notFound);

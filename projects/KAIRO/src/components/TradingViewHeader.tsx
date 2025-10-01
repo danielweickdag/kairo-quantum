@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
   Bell,
+  BellRing,
   Settings,
   User,
   ChevronDown,
@@ -22,6 +23,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMarketData } from '@/services/liveMarketService';
+import { alertService } from '@/services/alertService';
+import { toast } from 'react-hot-toast';
+import AlertSettingsModal from '@/components/modals/AlertSettingsModal';
 
 interface MarketData {
   symbol: string;
@@ -63,6 +67,9 @@ export default function TradingViewHeader() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
+  const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
+  const [showAlertSettings, setShowAlertSettings] = useState(false);
   const liveMarketData = useLiveMarketDataForHeader();
   const [marketData, setMarketData] = useState<MarketData[]>([]);
 
@@ -73,9 +80,49 @@ export default function TradingViewHeader() {
     }
   }, [liveMarketData]);
 
+  // Initialize alert service and check preferences
+  useEffect(() => {
+    const preferences = alertService.getPreferences();
+    if (preferences?.pushNotifications) {
+      setAlertsEnabled(true);
+    }
+
+    // Subscribe to alert updates
+    const unsubscribe = alertService.subscribe((alerts) => {
+      const unreadAlerts = alerts.filter(alert => !alert.triggeredAt);
+      setHasUnreadAlerts(unreadAlerts.length > 0);
+    });
+
+    return unsubscribe;
+  }, []);
+
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  const handleEnableAlerts = async () => {
+    if (!alertsEnabled) {
+      try {
+        const success = await alertService.enableAlerts();
+        if (success) {
+          setAlertsEnabled(true);
+          toast.success('Alerts enabled successfully!');
+        } else {
+          toast.error('Failed to enable alerts. Please check your browser settings.');
+        }
+      } catch (error) {
+        toast.error('Failed to enable alerts. Please check your browser settings.');
+      }
+    } else {
+      // If alerts are already enabled, show settings
+      setShowAlertSettings(true);
+    }
+  };
+
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowAlertSettings(true);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -149,9 +196,22 @@ export default function TradingViewHeader() {
         </Button>
 
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 relative">
-          <Bell className="h-4 w-4" />
-          <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-9 w-9 p-0 relative"
+          onClick={handleEnableAlerts}
+          onContextMenu={handleRightClick}
+          title={alertsEnabled ? 'Alerts enabled - Right click for settings' : 'Click to enable alerts'}
+        >
+          {alertsEnabled ? (
+            <BellRing className="h-4 w-4 text-green-500" />
+          ) : (
+            <Bell className="h-4 w-4" />
+          )}
+          {hasUnreadAlerts && (
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
+          )}
         </Button>
 
         {/* Navigation Menu */}
@@ -295,6 +355,12 @@ export default function TradingViewHeader() {
           </div>
         )}
       </div>
+      
+      {/* Alert Settings Modal */}
+      <AlertSettingsModal 
+        isOpen={showAlertSettings}
+        onClose={() => setShowAlertSettings(false)}
+      />
     </header>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import WorkflowBuilder from './WorkflowBuilder';
 import {
   Bot,
   Activity,
@@ -560,6 +561,7 @@ export default function AutomationDashboard() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
+          <TabsTrigger value="workflows">Workflow Builder</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="schedules">Schedules</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
@@ -847,7 +849,93 @@ export default function AutomationDashboard() {
           </div>
         </TabsContent>
 
+        <TabsContent value="workflows" className="space-y-6">
+          <WorkflowBuilder />
+        </TabsContent>
+
         <TabsContent value="monitoring" className="space-y-6">
+          {/* Workflow Execution Monitoring */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Workflow className="h-5 w-5" />
+                Real-time Workflow Execution
+              </CardTitle>
+              <CardDescription>Monitor active workflows and their execution status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-blue-600 font-medium">Active Workflows</p>
+                        <p className="text-2xl font-bold text-blue-900">12</p>
+                      </div>
+                      <Play className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-green-600 font-medium">Completed Today</p>
+                        <p className="text-2xl font-bold text-green-900">847</p>
+                      </div>
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    </div>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-red-600 font-medium">Failed Today</p>
+                        <p className="text-2xl font-bold text-red-900">3</p>
+                      </div>
+                      <AlertTriangle className="h-8 w-8 text-red-500" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg">
+                  <div className="p-4 border-b">
+                    <h4 className="font-semibold">Currently Executing</h4>
+                  </div>
+                  <div className="divide-y">
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <div>
+                          <p className="font-medium">Automatic Stop Loss - EURUSD</p>
+                          <p className="text-sm text-gray-500">Started 2 minutes ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">Running</Badge>
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <div>
+                          <p className="font-medium">Portfolio Rebalancing</p>
+                          <p className="text-sm text-gray-500">Started 5 minutes ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Completing</Badge>
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                        <div>
+                          <p className="font-medium">Risk Assessment Scan</p>
+                          <p className="text-sm text-gray-500">Started 1 minute ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-orange-100 text-orange-800">Processing</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Real-time Monitoring */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card>

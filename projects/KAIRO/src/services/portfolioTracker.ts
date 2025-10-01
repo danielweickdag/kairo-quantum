@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { MarketData, TradingSignal, TradeResult, PerformanceMetrics } from './types';
+import { TradingSignal, MarketData, TradeResult, PerformanceMetrics } from './types';
+import { alertService } from './alertService';
 import { MultiMarketTradingEngine } from './multiMarketTradingEngine';
 
 export interface Position {
@@ -623,11 +624,36 @@ export class PortfolioTracker extends EventEmitter {
   }
 
   /**
+   * Check portfolio alerts using new alert service
+   */
+  private checkPortfolioAlerts(snapshot: PortfolioSnapshot): void {
+    // Calculate portfolio value change from history
+    const previousSnapshot = this.portfolioHistory.length > 1 
+      ? this.portfolioHistory[this.portfolioHistory.length - 2] 
+      : null;
+    
+    const portfolioValueChange = previousSnapshot 
+      ? ((snapshot.totalValue - previousSnapshot.totalValue) / previousSnapshot.totalValue) * 100
+      : 0;
+    
+    // Trigger portfolio alerts based on conditions
+    alertService.checkAlertConditions({
+      symbol: 'PORTFOLIO',
+      price: snapshot.totalValue,
+      volume: 0 // Portfolio doesn't have volume, using 0 as placeholder
+    });
+  }
+
+  /**
    * Check for alerts
    */
   private checkAlerts(): void {
     const snapshot = this.currentSnapshot;
     
+    // Integrate with new alert service
+    this.checkPortfolioAlerts(snapshot);
+    
+    // Legacy alert system (keeping for backward compatibility)
     // Drawdown alert
     if (snapshot.drawdown > this.config.alertThresholds.drawdown) {
       this.createAlert('DRAWDOWN', 'HIGH', 

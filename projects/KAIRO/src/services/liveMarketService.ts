@@ -60,6 +60,44 @@ export interface MarketStats {
   lastUpdate: number;
 }
 
+export interface FuturesData {
+  symbol: string;
+  contractMonth: string;
+  expirationDate: string;
+  openInterest: number;
+  settlementPrice: number;
+  marginRequirement: number;
+  tickSize: number;
+  contractSize: number;
+  lastTradingDay: string;
+}
+
+export interface OptionsData {
+  symbol: string;
+  underlying: string;
+  strike: number;
+  expiration: string;
+  optionType: 'call' | 'put';
+  impliedVolatility: number;
+  delta: number;
+  gamma: number;
+  theta: number;
+  vega: number;
+  rho: number;
+  openInterest: number;
+  timeToExpiration: number;
+  intrinsicValue: number;
+  timeValue: number;
+}
+
+export interface DerivativeInstrument {
+  type: 'spot' | 'futures' | 'options';
+  symbol: string;
+  marketData: MarketTicker;
+  futuresData?: FuturesData;
+  optionsData?: OptionsData;
+}
+
 class LiveMarketService {
   private subscribers: Map<string, Set<(data: any) => void>> = new Map();
   private marketData: Map<string, MarketTicker> = new Map();
@@ -76,7 +114,14 @@ class LiveMarketService {
     'MATICUSDT', 'AVAXUSDT', 'ATOMUSDT', 'NEARUSDT', 'FTMUSDT', 'SANDUSDT',
     'MANAUSDT', 'CHZUSDT', 'ENJUSDT', 'GALAUSDT',
     // Major Indices
-    'SPY', 'QQQ', 'DJI', 'IXIC', 'RUT', 'VTI', 'IWM'
+    'SPY', 'QQQ', 'DJI', 'IXIC', 'RUT', 'VTI', 'IWM',
+    // Futures
+    'ES', 'NQ', 'YM', 'RTY', 'CL', 'GC', 'SI', 'NG', 'ZB', 'ZN', 'ZF', 'ZT',
+    'BTC-PERP', 'ETH-PERP', 'SOL-PERP', 'ADA-PERP',
+    // Options
+    'SPY-C-430-2024-03-15', 'SPY-P-430-2024-03-15', 'QQQ-C-370-2024-03-15', 'QQQ-P-370-2024-03-15',
+    'AAPL-C-180-2024-03-15', 'AAPL-P-180-2024-03-15', 'TSLA-C-200-2024-03-15', 'TSLA-P-200-2024-03-15',
+    'BTC-C-50000-2024-03-29', 'BTC-P-50000-2024-03-29', 'ETH-C-3000-2024-03-29', 'ETH-P-3000-2024-03-29'
   ];
 
   constructor() {
@@ -111,7 +156,37 @@ class LiveMarketService {
       IXIC: { basePrice: 14845.73, volatility: 0.020 },
       RUT: { basePrice: 2045.32, volatility: 0.025 },
       VTI: { basePrice: 245.30, volatility: 0.014 },
-      IWM: { basePrice: 198.75, volatility: 0.022 }
+      IWM: { basePrice: 198.75, volatility: 0.022 },
+      // Futures
+      ES: { basePrice: 4285.50, volatility: 0.018 },
+      NQ: { basePrice: 14850.25, volatility: 0.022 },
+      YM: { basePrice: 37650.00, volatility: 0.015 },
+      RTY: { basePrice: 2045.80, volatility: 0.028 },
+      CL: { basePrice: 78.45, volatility: 0.035 },
+      GC: { basePrice: 2025.60, volatility: 0.025 },
+      SI: { basePrice: 24.85, volatility: 0.040 },
+      NG: { basePrice: 2.85, volatility: 0.055 },
+      ZB: { basePrice: 112.25, volatility: 0.012 },
+      ZN: { basePrice: 108.75, volatility: 0.015 },
+      ZF: { basePrice: 105.50, volatility: 0.010 },
+      ZT: { basePrice: 102.25, volatility: 0.008 },
+      'BTC-PERP': { basePrice: 45200.00, volatility: 0.025 },
+      'ETH-PERP': { basePrice: 2820.00, volatility: 0.030 },
+      'SOL-PERP': { basePrice: 99.50, volatility: 0.040 },
+      'ADA-PERP': { basePrice: 0.46, volatility: 0.035 },
+      // Options
+      'SPY-C-430-2024-03-15': { basePrice: 8.50, volatility: 0.45 },
+      'SPY-P-430-2024-03-15': { basePrice: 9.25, volatility: 0.42 },
+      'QQQ-C-370-2024-03-15': { basePrice: 12.75, volatility: 0.38 },
+      'QQQ-P-370-2024-03-15': { basePrice: 17.50, volatility: 0.40 },
+      'AAPL-C-180-2024-03-15': { basePrice: 5.25, volatility: 0.35 },
+      'AAPL-P-180-2024-03-15': { basePrice: 6.80, volatility: 0.37 },
+      'TSLA-C-200-2024-03-15': { basePrice: 15.60, volatility: 0.55 },
+      'TSLA-P-200-2024-03-15': { basePrice: 18.90, volatility: 0.52 },
+      'BTC-C-50000-2024-03-29': { basePrice: 2850.00, volatility: 0.65 },
+      'BTC-P-50000-2024-03-29': { basePrice: 7650.00, volatility: 0.68 },
+      'ETH-C-3000-2024-03-29': { basePrice: 285.50, volatility: 0.60 },
+      'ETH-P-3000-2024-03-29': { basePrice: 465.25, volatility: 0.62 }
     };
 
     this.SUPPORTED_SYMBOLS.forEach(symbol => {
@@ -460,11 +535,20 @@ class LiveMarketService {
     return this.isConnected;
   }
 
+  public connect(): void {
+    if (!this.isConnected) {
+      this.initializeMarketData();
+      this.startDataSimulation();
+      logger.info('Live market service connected', 'LiveMarketService');
+    }
+  }
+
   public disconnect(): void {
     this.isConnected = false;
     this.updateIntervals.forEach(interval => clearInterval(interval));
     this.updateIntervals.clear();
     this.subscribers.clear();
+    logger.info('Live market service disconnected', 'LiveMarketService');
   }
 
   // Market analysis helpers
@@ -541,6 +625,209 @@ class LiveMarketService {
       rsi: null,
       lastUpdate: Date.now()
     };
+  }
+
+  // Futures-specific methods
+  public getFuturesData(symbol: string): FuturesData | null {
+    if (!this.isFuturesSymbol(symbol)) return null;
+    
+    const contractMonth = this.extractContractMonth(symbol);
+    const expirationDate = this.calculateExpirationDate(symbol);
+    
+    return {
+      symbol,
+      contractMonth,
+      expirationDate,
+      openInterest: Math.floor(Math.random() * 100000) + 50000,
+      settlementPrice: this.marketData.get(symbol)?.price || 0,
+      marginRequirement: this.calculateMarginRequirement(symbol),
+      tickSize: this.getTickSize(symbol),
+      contractSize: this.getContractSize(symbol),
+      lastTradingDay: this.calculateLastTradingDay(symbol)
+    };
+  }
+
+  // Options-specific methods
+  public getOptionsData(symbol: string): OptionsData | null {
+    if (!this.isOptionsSymbol(symbol)) return null;
+    
+    const { underlying, strike, expiration, optionType } = this.parseOptionsSymbol(symbol);
+    const currentPrice = this.marketData.get(symbol)?.price || 0;
+    const underlyingPrice = this.getUnderlyingPrice(underlying);
+    
+    const timeToExpiration = this.calculateTimeToExpiration(expiration);
+    const impliedVolatility = 0.2 + Math.random() * 0.6; // 20-80% IV
+    
+    const greeks = this.calculateGreeks(currentPrice, underlyingPrice, strike, timeToExpiration, impliedVolatility, optionType);
+    
+    return {
+      symbol,
+      underlying,
+      strike,
+      expiration,
+      optionType,
+      impliedVolatility,
+      ...greeks,
+      openInterest: Math.floor(Math.random() * 10000) + 1000,
+      timeToExpiration,
+      intrinsicValue: this.calculateIntrinsicValue(underlyingPrice, strike, optionType),
+      timeValue: currentPrice - this.calculateIntrinsicValue(underlyingPrice, strike, optionType)
+    };
+  }
+
+  public getDerivativeInstrument(symbol: string): DerivativeInstrument | null {
+    const marketData = this.marketData.get(symbol);
+    if (!marketData) return null;
+    
+    let type: 'spot' | 'futures' | 'options' = 'spot';
+    let futuresData: FuturesData | undefined;
+    let optionsData: OptionsData | undefined;
+    
+    if (this.isFuturesSymbol(symbol)) {
+      type = 'futures';
+      futuresData = this.getFuturesData(symbol) || undefined;
+    } else if (this.isOptionsSymbol(symbol)) {
+      type = 'options';
+      optionsData = this.getOptionsData(symbol) || undefined;
+    }
+    
+    return {
+      type,
+      symbol,
+      marketData,
+      futuresData,
+      optionsData
+    };
+  }
+
+  // Helper methods
+  private isFuturesSymbol(symbol: string): boolean {
+    return symbol.includes('-PERP') || ['ES', 'NQ', 'YM', 'RTY', 'CL', 'GC', 'SI', 'NG', 'ZB', 'ZN', 'ZF', 'ZT'].includes(symbol);
+  }
+
+  private isOptionsSymbol(symbol: string): boolean {
+    return symbol.includes('-C-') || symbol.includes('-P-');
+  }
+
+  private extractContractMonth(symbol: string): string {
+    if (symbol.includes('-PERP')) return 'Perpetual';
+    const date = new Date();
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return `${months[date.getMonth()]}${date.getFullYear().toString().slice(-2)}`;
+  }
+
+  private calculateExpirationDate(symbol: string): string {
+    if (symbol.includes('-PERP')) return 'N/A';
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    return date.toISOString().split('T')[0];
+  }
+
+  private calculateMarginRequirement(symbol: string): number {
+    const price = this.marketData.get(symbol)?.price || 0;
+    const marginRates: { [key: string]: number } = {
+      'ES': 0.05, 'NQ': 0.05, 'YM': 0.05, 'RTY': 0.06,
+      'CL': 0.08, 'GC': 0.04, 'SI': 0.06, 'NG': 0.10
+    };
+    return price * (marginRates[symbol] || 0.05);
+  }
+
+  private getTickSize(symbol: string): number {
+    const tickSizes: { [key: string]: number } = {
+      'ES': 0.25, 'NQ': 0.25, 'YM': 1.0, 'RTY': 0.10,
+      'CL': 0.01, 'GC': 0.10, 'SI': 0.005, 'NG': 0.001
+    };
+    return tickSizes[symbol] || 0.01;
+  }
+
+  private getContractSize(symbol: string): number {
+    const contractSizes: { [key: string]: number } = {
+      'ES': 50, 'NQ': 20, 'YM': 5, 'RTY': 50,
+      'CL': 1000, 'GC': 100, 'SI': 5000, 'NG': 10000
+    };
+    return contractSizes[symbol] || 1;
+  }
+
+  private calculateLastTradingDay(symbol: string): string {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(15); // Typically 3rd Friday, simplified to 15th
+    return date.toISOString().split('T')[0];
+  }
+
+  private parseOptionsSymbol(symbol: string): { underlying: string; strike: number; expiration: string; optionType: 'call' | 'put' } {
+    const parts = symbol.split('-');
+    return {
+      underlying: parts[0],
+      optionType: parts[1].toLowerCase() === 'c' ? 'call' : 'put',
+      strike: parseFloat(parts[2]),
+      expiration: parts[3]
+    };
+  }
+
+  private getUnderlyingPrice(underlying: string): number {
+    // Map options underlying to actual symbols
+    const underlyingMap: { [key: string]: string } = {
+      'SPY': 'SPY', 'QQQ': 'QQQ', 'AAPL': 'AAPL', 'TSLA': 'TSLA',
+      'BTC': 'BTCUSDT', 'ETH': 'ETHUSDT'
+    };
+    const actualSymbol = underlyingMap[underlying] || underlying;
+    return this.marketData.get(actualSymbol)?.price || 0;
+  }
+
+  private calculateTimeToExpiration(expiration: string): number {
+    const expirationDate = new Date(expiration);
+    const now = new Date();
+    const diffTime = expirationDate.getTime() - now.getTime();
+    return Math.max(0, diffTime / (1000 * 60 * 60 * 24 * 365)); // Years
+  }
+
+  private calculateGreeks(optionPrice: number, underlyingPrice: number, strike: number, timeToExpiration: number, iv: number, optionType: 'call' | 'put') {
+    // Simplified Black-Scholes Greeks calculation
+    const riskFreeRate = 0.05; // 5% risk-free rate
+    const d1 = (Math.log(underlyingPrice / strike) + (riskFreeRate + 0.5 * iv * iv) * timeToExpiration) / (iv * Math.sqrt(timeToExpiration));
+    const d2 = d1 - iv * Math.sqrt(timeToExpiration);
+    
+    const normalCDF = (x: number) => 0.5 * (1 + this.erf(x / Math.sqrt(2)));
+    const normalPDF = (x: number) => Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+    
+    const delta = optionType === 'call' ? normalCDF(d1) : normalCDF(d1) - 1;
+    const gamma = normalPDF(d1) / (underlyingPrice * iv * Math.sqrt(timeToExpiration));
+    const theta = optionType === 'call' 
+      ? -(underlyingPrice * normalPDF(d1) * iv) / (2 * Math.sqrt(timeToExpiration)) - riskFreeRate * strike * Math.exp(-riskFreeRate * timeToExpiration) * normalCDF(d2)
+      : -(underlyingPrice * normalPDF(d1) * iv) / (2 * Math.sqrt(timeToExpiration)) + riskFreeRate * strike * Math.exp(-riskFreeRate * timeToExpiration) * normalCDF(-d2);
+    const vega = underlyingPrice * normalPDF(d1) * Math.sqrt(timeToExpiration);
+    const rho = optionType === 'call'
+      ? strike * timeToExpiration * Math.exp(-riskFreeRate * timeToExpiration) * normalCDF(d2)
+      : -strike * timeToExpiration * Math.exp(-riskFreeRate * timeToExpiration) * normalCDF(-d2);
+    
+    return { delta, gamma, theta: theta / 365, vega: vega / 100, rho: rho / 100 };
+  }
+
+  private calculateIntrinsicValue(underlyingPrice: number, strike: number, optionType: 'call' | 'put'): number {
+    if (optionType === 'call') {
+      return Math.max(0, underlyingPrice - strike);
+    } else {
+      return Math.max(0, strike - underlyingPrice);
+    }
+  }
+
+  private erf(x: number): number {
+    // Approximation of error function
+    const a1 =  0.254829592;
+    const a2 = -0.284496736;
+    const a3 =  1.421413741;
+    const a4 = -1.453152027;
+    const a5 =  1.061405429;
+    const p  =  0.3275911;
+    
+    const sign = x >= 0 ? 1 : -1;
+    x = Math.abs(x);
+    
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    
+    return sign * y;
   }
 }
 
@@ -620,4 +907,56 @@ export function useRecentTrades(symbol: string, limit = 20) {
   }, [symbol, limit]);
   
   return data;
+}
+
+// Futures and Options hooks
+export function useFuturesData(symbol: string) {
+  const [futuresData, setFuturesData] = React.useState<FuturesData | null>(null);
+
+  React.useEffect(() => {
+    const data = liveMarketService.getFuturesData(symbol);
+    setFuturesData(data);
+
+    const unsubscribe = liveMarketService.subscribe(`futures:${symbol}`, (newData: FuturesData) => {
+      setFuturesData(newData);
+    });
+
+    return unsubscribe;
+  }, [symbol]);
+
+  return futuresData;
+}
+
+export function useOptionsData(symbol: string) {
+  const [optionsData, setOptionsData] = React.useState<OptionsData | null>(null);
+
+  React.useEffect(() => {
+    const data = liveMarketService.getOptionsData(symbol);
+    setOptionsData(data);
+
+    const unsubscribe = liveMarketService.subscribe(`options:${symbol}`, (newData: OptionsData) => {
+      setOptionsData(newData);
+    });
+
+    return unsubscribe;
+  }, [symbol]);
+
+  return optionsData;
+}
+
+export function useDerivativeInstrument(symbol: string) {
+  const [instrument, setInstrument] = React.useState<DerivativeInstrument | null>(null);
+
+  React.useEffect(() => {
+    const data = liveMarketService.getDerivativeInstrument(symbol);
+    setInstrument(data);
+
+    const unsubscribe = liveMarketService.subscribe(`instrument:${symbol}`, (newData: DerivativeInstrument) => {
+      setInstrument(newData);
+    });
+
+    return unsubscribe;
+  }, [symbol]);
+
+  return instrument;
 }

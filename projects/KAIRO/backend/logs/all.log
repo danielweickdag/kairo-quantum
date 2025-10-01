@@ -372,3 +372,56 @@
 2025-09-24 15:25:24:2524 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
 2025-09-24 15:25:24:2524 [32minfo[39m: [32m📡 Broker monitoring service started[39m
 2025-09-24 16:03:17:317 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-26 00:00:02:02 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-26 06:00:01:01 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-26 12:00:00:00 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-27 14:35:06:356 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-27 14:35:06:356 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-27 14:35:06:356 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-27 14:35:06:356 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-27 18:00:04:04 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-29 00:00:01:01 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-29 10:17:54:1754 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-29 10:17:54:1754 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-29 10:17:54:1754 [32minfo[39m: [32mProcess terminated[39m
+2025-09-29 10:18:00:180 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-29 10:18:00:180 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-29 10:18:00:180 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-29 10:18:00:180 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-29 10:21:21:2121 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-29 10:21:21:2121 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-29 10:21:21:2121 [32minfo[39m: [32mProcess terminated[39m
+2025-09-29 10:21:26:2126 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-29 10:21:26:2126 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-29 10:21:26:2126 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-29 10:21:26:2126 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-30 18:00:50:050 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-09-30 21:56:10:5610 [31merror[39m: [31mNot Found - /?ide_webview_request_time=1759287369976[39m
+2025-09-30 22:01:59:159 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-30 22:01:59:159 [32minfo[39m: [32mSIGTERM received, shutting down gracefully[39m
+2025-09-30 22:01:59:159 [32minfo[39m: [32mProcess terminated[39m
+2025-09-30 22:02:16:216 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-30 22:02:16:216 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-30 22:02:16:216 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-30 22:02:16:216 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-30 22:38:56:3856 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-30 22:38:56:3856 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-30 22:38:57:3857 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-30 22:38:57:3857 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-30 23:53:51:5351 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-30 23:53:51:5351 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-30 23:53:52:5352 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-30 23:53:52:5352 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-30 23:54:10:5410 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-09-30 23:54:10:5410 [32minfo[39m: [32m📊 Environment: development[39m
+2025-09-30 23:54:11:5411 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-09-30 23:54:11:5411 [32minfo[39m: [32m📡 Broker monitoring service started[39m
+2025-09-30 23:57:20:5720 [31merror[39m: [31mStripe webhook secret not configured[39m
+2025-09-30 23:57:20:5720 [32minfo[39m: [32mReceived PayPal webhook: PAYMENT.SALE.COMPLETED (WH-test-event-id)[39m
+2025-09-30 23:57:20:5720 [31merror[39m: [31mError processing PayPal webhook: websocketService_1.WebSocketService.getInstance is not a function[39m
+2025-09-30 23:57:20:5720 [32minfo[39m: [32mCreated new automation rule: rule_1759294640897_xnv9m3flq[39m
+2025-10-01 00:00:07:07 [31merror[39m: [31mNot Found - /api/stripe/sync[39m
+2025-10-01 00:00:34:034 [32minfo[39m: [32m🚀 Server running on port 3002[39m
+2025-10-01 00:00:34:034 [32minfo[39m: [32m📊 Environment: development[39m
+2025-10-01 00:00:35:035 [32minfo[39m: [32mStarting monitoring for 0 active broker connections[39m
+2025-10-01 00:00:35:035 [32minfo[39m: [32m📡 Broker monitoring service started[39m

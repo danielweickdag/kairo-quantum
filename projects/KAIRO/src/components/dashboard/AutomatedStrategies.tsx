@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, Settings, TrendingUp, TrendingDown, BarChart3, Zap, Target, Shield } from 'lucide-react';
+import { Play, Pause, Settings, TrendingUp, TrendingDown, BarChart3, Zap, Target, Shield, Plus, X } from 'lucide-react';
 
 interface Strategy {
   id: string;
@@ -79,6 +79,15 @@ const AutomatedStrategies: React.FC = () => {
 
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
   const [showConfig, setShowConfig] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newStrategy, setNewStrategy] = useState({
+    name: '',
+    description: '',
+    type: 'momentum' as Strategy['type'],
+    riskLevel: 'medium' as Strategy['riskLevel'],
+    allocation: 1000
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState<StrategyConfig>({
     stopLoss: 2.0,
     takeProfit: 4.0,
@@ -96,6 +105,38 @@ const AutomatedStrategies: React.FC = () => {
       }
       return strategy;
     }));
+  };
+
+  const handleCreateStrategy = async () => {
+    if (!newStrategy.name || !newStrategy.description) return;
+    
+    setIsLoading(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const strategy: Strategy = {
+      id: Date.now().toString(),
+      name: newStrategy.name,
+      description: newStrategy.description,
+      type: newStrategy.type,
+      riskLevel: newStrategy.riskLevel,
+      allocation: newStrategy.allocation,
+      status: 'paused',
+      profit: 0,
+      trades: 0,
+      winRate: 0
+    };
+    
+    setStrategies(prev => [...prev, strategy]);
+    setNewStrategy({
+      name: '',
+      description: '',
+      type: 'momentum',
+      riskLevel: 'medium',
+      allocation: 1000
+    });
+    setShowCreateModal(false);
+    setIsLoading(false);
   };
 
   const getStrategyIcon = (type: string) => {
@@ -134,7 +175,11 @@ const AutomatedStrategies: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Automated Strategies</h2>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
           Create Strategy
         </button>
       </div>
@@ -259,7 +304,7 @@ const AutomatedStrategies: React.FC = () => {
                 onClick={() => setShowConfig(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                ×
+                <X className="w-5 h-5" />
               </button>
             </div>
             
@@ -271,9 +316,11 @@ const AutomatedStrategies: React.FC = () => {
                 <input
                   type="number"
                   value={config.stopLoss}
-                  onChange={(e) => setConfig(prev => ({ ...prev, stopLoss: parseFloat(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  onChange={(e) => setConfig(prev => ({ ...prev, stopLoss: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   step="0.1"
+                  min="0"
+                  max="10"
                 />
               </div>
               
@@ -284,34 +331,40 @@ const AutomatedStrategies: React.FC = () => {
                 <input
                   type="number"
                   value={config.takeProfit}
-                  onChange={(e) => setConfig(prev => ({ ...prev, takeProfit: parseFloat(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  onChange={(e) => setConfig(prev => ({ ...prev, takeProfit: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   step="0.1"
+                  min="0"
+                  max="20"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Max Concurrent Trades
+                  Max Trades per Day
                 </label>
                 <input
                   type="number"
                   value={config.maxTrades}
-                  onChange={(e) => setConfig(prev => ({ ...prev, maxTrades: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  onChange={(e) => setConfig(prev => ({ ...prev, maxTrades: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  min="1"
+                  max="100"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Risk Per Trade (%)
+                  Risk per Trade (%)
                 </label>
                 <input
                   type="number"
                   value={config.riskPerTrade}
-                  onChange={(e) => setConfig(prev => ({ ...prev, riskPerTrade: parseFloat(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  onChange={(e) => setConfig(prev => ({ ...prev, riskPerTrade: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   step="0.1"
+                  min="0.1"
+                  max="5"
                 />
               </div>
               
@@ -322,7 +375,7 @@ const AutomatedStrategies: React.FC = () => {
                 <select
                   value={config.timeframe}
                   onChange={(e) => setConfig(prev => ({ ...prev, timeframe: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="1m">1 Minute</option>
                   <option value="5m">5 Minutes</option>
@@ -349,6 +402,117 @@ const AutomatedStrategies: React.FC = () => {
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Strategy Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Create New Strategy
+              </h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Strategy Name
+                </label>
+                <input
+                  type="text"
+                  value={newStrategy.name}
+                  onChange={(e) => setNewStrategy(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Enter strategy name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={newStrategy.description}
+                  onChange={(e) => setNewStrategy(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-20 resize-none"
+                  placeholder="Describe your strategy"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Strategy Type
+                </label>
+                <select
+                  value={newStrategy.type}
+                  onChange={(e) => setNewStrategy(prev => ({ ...prev, type: e.target.value as Strategy['type'] }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="scalping">Scalping</option>
+                  <option value="swing">Swing Trading</option>
+                  <option value="momentum">Momentum</option>
+                  <option value="arbitrage">Arbitrage</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Risk Level
+                </label>
+                <select
+                  value={newStrategy.riskLevel}
+                  onChange={(e) => setNewStrategy(prev => ({ ...prev, riskLevel: e.target.value as Strategy['riskLevel'] }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="low">Low Risk</option>
+                  <option value="medium">Medium Risk</option>
+                  <option value="high">High Risk</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Initial Allocation ($)
+                </label>
+                <input
+                  type="number"
+                  value={newStrategy.allocation}
+                  onChange={(e) => setNewStrategy(prev => ({ ...prev, allocation: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  min="100"
+                  step="100"
+                  placeholder="1000"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateStrategy}
+                disabled={isLoading || !newStrategy.name || !newStrategy.description}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading && (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                Create Strategy
               </button>
             </div>
           </div>

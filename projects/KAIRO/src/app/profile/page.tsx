@@ -1,9 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useWorkflow } from '@/contexts/WorkflowContext';
 import AppLayout from '@/components/layouts/AppLayout';
+import TradingDropdown, { MainNavigationDropdown, UserAccountDropdown } from '@/components/ui/TradingDropdown';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   User,
   Settings,
@@ -24,9 +32,44 @@ import {
   Award,
   Star,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Wallet,
+  Building2,
+  ArrowUpDown,
+  History,
+  DollarSign,
+  Eye,
+  EyeOff,
+  Clock,
+  PieChart,
+  BarChart3,
+  Bot,
+  Target,
+  Zap,
+  Globe,
+  BarChart,
+  LineChart,
+  Briefcase,
+  PlayCircle,
+  PauseCircle,
+  StopCircle,
+  RefreshCw,
+  Filter,
+  Search,
+  Download,
+  Share
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { cn, formatCurrency } from '@/lib/utils';
+
+// Import all the financial components
+import FinancialUserProfile from '@/components/dashboard/FinancialUserProfile';
+import BankAccountManager from '@/components/dashboard/BankAccountManager';
+import DepositInterface from '@/components/dashboard/DepositInterface';
+import WithdrawalInterface from '@/components/dashboard/WithdrawalInterface';
+import AutomatedTradingConfig from '@/components/dashboard/AutomatedTradingConfig';
+import KYCVerification from '@/components/dashboard/KYCVerification';
+import TransactionHistory from '@/components/dashboard/TransactionHistory';
 
 interface UserProfile {
   id: string;
@@ -52,13 +95,38 @@ interface UserProfile {
   };
 }
 
+interface UserStats {
+  totalBalance: number;
+  availableBalance: number;
+  investedAmount: number;
+  totalGains: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  activeStrategies: number;
+  monthlyReturn: number;
+}
+
+interface AccountStatus {
+  isVerified: boolean;
+  kycLevel: 'none' | 'basic' | 'intermediate' | 'advanced';
+  tradingEnabled: boolean;
+  withdrawalEnabled: boolean;
+  depositEnabled: boolean;
+}
+
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const { theme } = useTheme();
+  const { workflowState, executeWorkflow } = useWorkflow();
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [balanceVisible, setBalanceVisible] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState<'idle' | 'running' | 'paused'>('idle');
+  const [activeWorkflows, setActiveWorkflows] = useState(3);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -69,6 +137,156 @@ export default function ProfilePage() {
     isPublic: true,
     riskTolerance: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH'
   });
+  const [userStats] = useState<UserStats>({
+    totalBalance: 47850.75,
+    availableBalance: 12450.25,
+    investedAmount: 35400.50,
+    totalGains: 8450.75,
+    totalDeposits: 45000,
+    totalWithdrawals: 5600,
+    activeStrategies: 3,
+    monthlyReturn: 12.5
+  });
+  const [accountStatus] = useState<AccountStatus>({
+    isVerified: true,
+    kycLevel: 'intermediate',
+    tradingEnabled: true,
+    withdrawalEnabled: true,
+    depositEnabled: true
+  });
+
+  // Trading dropdown sections
+  const quickTradingSections = [
+    {
+      title: "Quick Trade",
+      items: [
+        {
+          id: 'buy-btc',
+          label: 'Buy BTC',
+          icon: <DollarSign className="h-4 w-4 text-green-500" />,
+          description: '$67,234.50 (+2.34%)',
+          onClick: () => router.push('/trading?action=buy&symbol=BTCUSDT')
+        },
+        {
+          id: 'sell-eth',
+          label: 'Sell ETH',
+          icon: <DollarSign className="h-4 w-4 text-red-500" />,
+          description: '$3,456.78 (+1.87%)',
+          onClick: () => router.push('/trading?action=sell&symbol=ETHUSDT')
+        },
+        {
+          id: 'market-overview',
+          label: 'Market Overview',
+          icon: <BarChart className="h-4 w-4" />,
+          description: 'View all markets',
+          href: '/trading'
+        }
+      ]
+    },
+    {
+      title: "Portfolio Actions",
+      items: [
+        {
+          id: 'portfolio',
+          label: 'View Portfolio',
+          icon: <Briefcase className="h-4 w-4" />,
+          description: 'Manage your holdings',
+          href: '/portfolio'
+        },
+        {
+          id: 'analytics',
+          label: 'Performance Analytics',
+          icon: <LineChart className="h-4 w-4" />,
+          description: 'Track your performance',
+          onClick: () => setActiveTab('analytics')
+        }
+      ]
+    }
+  ];
+
+  const automationSections = [
+    {
+      title: "Workflow Management",
+      items: [
+        {
+          id: 'create-workflow',
+          label: 'Create New Workflow',
+          icon: <Bot className="h-4 w-4" />,
+          description: 'Build automated strategies',
+          href: '/automation/builder'
+        },
+        {
+          id: 'manage-workflows',
+          label: 'Manage Workflows',
+          icon: <Settings className="h-4 w-4" />,
+          description: `${activeWorkflows} active workflows`,
+          onClick: () => setActiveTab('automation')
+        }
+      ]
+    },
+    {
+      title: "Quick Actions",
+      items: [
+        {
+          id: 'start-workflow',
+          label: workflowStatus === 'running' ? 'Pause All' : 'Start All',
+          icon: workflowStatus === 'running' ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />,
+          onClick: () => {
+            const newStatus = workflowStatus === 'running' ? 'paused' : 'running';
+            setWorkflowStatus(newStatus);
+            toast.success(`Workflows ${newStatus === 'running' ? 'started' : 'paused'}`);
+          }
+        },
+        {
+          id: 'stop-all',
+          label: 'Stop All Workflows',
+          icon: <StopCircle className="h-4 w-4 text-red-500" />,
+          onClick: () => {
+            setWorkflowStatus('idle');
+            toast.success('All workflows stopped');
+          }
+        }
+      ]
+    }
+  ];
+
+  const toolsSections = [
+    {
+      title: "Analysis Tools",
+      items: [
+        {
+          id: 'market-scanner',
+          label: 'Market Scanner',
+          icon: <Search className="h-4 w-4" />,
+          description: 'Find opportunities',
+          href: '/tools/scanner'
+        },
+        {
+          id: 'screener',
+          label: 'Stock Screener',
+          icon: <Filter className="h-4 w-4" />,
+          description: 'Filter by criteria',
+          href: '/tools/screener'
+        }
+      ]
+    },
+    {
+      items: [
+        {
+          id: 'export-data',
+          label: 'Export Portfolio',
+          icon: <Download className="h-4 w-4" />,
+          onClick: () => toast.success('Exporting portfolio data...')
+        },
+        {
+          id: 'share-performance',
+          label: 'Share Performance',
+          icon: <Share className="h-4 w-4" />,
+          onClick: () => toast.success('Performance report shared!')
+        }
+      ]
+    }
+  ];
 
   useEffect(() => {
     fetchProfile();
@@ -94,8 +312,8 @@ export default function ProfilePage() {
           isVerified: user.isVerified || false,
           isPublic: user.isPublic || true,
           riskTolerance: 'MEDIUM',
-          totalBalance: 0,
-          availableBalance: 0,
+          totalBalance: userStats.totalBalance,
+          availableBalance: userStats.availableBalance,
           createdAt: user.createdAt || new Date().toISOString(),
           _count: {
             followers: 0,
@@ -155,6 +373,24 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  const getKYCLevelColor = (level: string) => {
+    switch (level) {
+      case 'advanced': return 'text-green-600 bg-green-50';
+      case 'intermediate': return 'text-blue-600 bg-blue-50';
+      case 'basic': return 'text-yellow-600 bg-yellow-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getKYCLevelText = (level: string) => {
+    switch (level) {
+      case 'advanced': return 'Advanced Verified';
+      case 'intermediate': return 'Intermediate Verified';
+      case 'basic': return 'Basic Verified';
+      default: return 'Not Verified';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -178,301 +414,478 @@ export default function ProfilePage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage your account information and preferences</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handleCancel}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Profile</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage your account, finances, and trading preferences</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge className={getKYCLevelColor(accountStatus.kycLevel)}>
+              <Shield className="w-3 h-3 mr-1" />
+              {getKYCLevelText(accountStatus.kycLevel)}
+            </Badge>
+            {accountStatus.isVerified && (
+              <Badge className="text-green-600 bg-green-50">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Verified
+              </Badge>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
-          {/* Profile Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <div className="h-24 w-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                  {profile.avatar ? (
-                    <img src={profile.avatar} alt="Profile" className="h-24 w-24 rounded-full object-cover" />
-                  ) : (
-                    <span className="text-white font-bold text-2xl">
-                      {profile.firstName[0]}{profile.lastName[0]}
-                    </span>
-                  )}
-                </div>
-                {isEditing && (
-                  <button className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
-                    <Camera className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {profile.firstName} {profile.lastName}
-                  </h2>
-                  {profile.isVerified && (
-                    <CheckCircle className="h-6 w-6 text-blue-500" />
-                  )}
-                </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">@{profile.username}</p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                  <span className="flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
-                    {profile._count.followers} followers
-                  </span>
-                  <span className="flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    {profile._count.portfolios} portfolios
-                  </span>
-                  <span className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Joined {new Date(profile.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Profile Information */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  First Name
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                ) : (
-                  <p className="text-gray-900 dark:text-white">{profile.firstName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Last Name
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                ) : (
-                  <p className="text-gray-900 dark:text-white">{profile.lastName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Username
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                ) : (
-                  <p className="text-gray-900 dark:text-white">@{profile.username}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
-                </label>
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <p className="text-gray-900 dark:text-white">{profile.email}</p>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone
-                </label>
-                {isEditing ? (
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter phone number"
-                  />
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <p className="text-gray-900 dark:text-white">{profile.phone || 'Not provided'}</p>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Location
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter location"
-                  />
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <p className="text-gray-900 dark:text-white">{profile.location || 'Not provided'}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Bio
-              </label>
-              {isEditing ? (
-                <textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Tell us about yourself..."
-                />
-              ) : (
-                <p className="text-gray-900 dark:text-white">{profile.bio || 'No bio provided'}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Account Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Account Settings</h3>
-            <div className="space-y-4">
+        {/* Quick Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Public Profile</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Make your profile visible to other users</p>
+                  <p className="text-sm text-muted-foreground">Total Balance</p>
+                  <div className="flex items-center space-x-2">
+                    <p className={cn("text-2xl font-bold", !balanceVisible && "blur-sm")}>
+                      {formatCurrency(userStats.totalBalance)}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setBalanceVisible(!balanceVisible)}
+                    >
+                      {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </Button>
+                  </div>
                 </div>
-                {isEditing ? (
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isPublic}
-                      onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  </label>
-                ) : (
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    profile.isPublic 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                <Wallet className="w-8 h-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Gains</p>
+                  <p className={cn(
+                    "text-2xl font-bold",
+                    userStats.totalGains >= 0 ? 'text-green-600' : 'text-red-600',
+                    !balanceVisible && "blur-sm"
+                  )}>
+                    {userStats.totalGains >= 0 ? '+' : ''}{formatCurrency(userStats.totalGains)}
+                  </p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Strategies</p>
+                  <p className="text-2xl font-bold">{userStats.activeStrategies}</p>
+                </div>
+                <Activity className="w-8 h-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Return</p>
+                  <p className="text-2xl font-bold text-green-600">+{userStats.monthlyReturn}%</p>
+                </div>
+                <BarChart3 className="w-8 h-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Automation</p>
+                  <p className="text-2xl font-bold">{activeWorkflows}</p>
+                  <p className={`text-sm ${
+                    workflowStatus === 'running' ? 'text-green-600' : 
+                    workflowStatus === 'paused' ? 'text-yellow-600' : 'text-gray-600'
                   }`}>
-                    {profile.isPublic ? 'Public' : 'Private'}
-                  </span>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Risk Tolerance
-                </label>
-                {isEditing ? (
-                  <select
-                    value={formData.riskTolerance}
-                    onChange={(e) => setFormData({ ...formData, riskTolerance: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="VERY_HIGH">Very High</option>
-                  </select>
-                ) : (
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    profile.riskTolerance === 'LOW' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                    profile.riskTolerance === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                    profile.riskTolerance === 'HIGH' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400' :
-                    'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                  }`}>
-                    {profile.riskTolerance.replace('_', ' ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Account Stats */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Account Overview</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Activity className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    {workflowStatus === 'running' ? 'Active' : 
+                     workflowStatus === 'paused' ? 'Paused' : 'Idle'}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">${profile.totalBalance.toLocaleString()}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Balance</p>
+                <Bot className={`w-8 h-8 ${
+                  workflowStatus === 'running' ? 'text-green-500' : 
+                  workflowStatus === 'paused' ? 'text-yellow-500' : 'text-gray-500'
+                }`} />
               </div>
-              <div className="text-center">
-                <div className="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">${profile.availableBalance.toLocaleString()}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Available Balance</p>
-              </div>
-              <div className="text-center">
-                <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Award className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{profile.accountType}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Account Type</p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+
+        {/* Account Status Alerts */}
+        {!accountStatus.isVerified && (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your account is not fully verified. Complete KYC verification to unlock all features.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {accountStatus.kycLevel === 'basic' && (
+          <Alert className="mb-6">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              Upgrade to Intermediate verification to increase your withdrawal limits and access advanced trading features.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+              <TabsTrigger value="overview" className="flex items-center space-x-2">
+                <User className="w-4 h-4" />
+                <span>Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="wallet" className="flex items-center space-x-2">
+                <Wallet className="w-4 h-4" />
+                <span>Wallet</span>
+              </TabsTrigger>
+              <TabsTrigger value="banking" className="flex items-center space-x-2">
+                <Building2 className="w-4 h-4" />
+                <span>Banking</span>
+              </TabsTrigger>
+              <TabsTrigger value="trading" className="flex items-center space-x-2">
+                <ArrowUpDown className="w-4 h-4" />
+                <span>Trading</span>
+              </TabsTrigger>
+              <TabsTrigger value="automation" className="flex items-center space-x-2">
+                <Bot className="w-4 h-4" />
+                <span>Automation</span>
+              </TabsTrigger>
+              <TabsTrigger value="verification" className="flex items-center space-x-2">
+                <Shield className="w-4 h-4" />
+                <span>KYC</span>
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center space-x-2">
+                <History className="w-4 h-4" />
+                <span>History</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center space-x-2">
+                <Settings className="w-4 h-4" />
+                <span>Settings</span>
+              </TabsTrigger>
+            </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Account Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Summary</CardTitle>
+                  <CardDescription>Your financial overview at a glance</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Available Balance</span>
+                    <span className={cn("font-semibold", !balanceVisible && "blur-sm")}>
+                      {formatCurrency(userStats.availableBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Invested Amount</span>
+                    <span className={cn("font-semibold", !balanceVisible && "blur-sm")}>
+                      {formatCurrency(userStats.investedAmount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Total Deposits</span>
+                    <span className={cn("font-semibold text-green-600", !balanceVisible && "blur-sm")}>
+                      {formatCurrency(userStats.totalDeposits)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Total Withdrawals</span>
+                    <span className={cn("font-semibold text-red-600", !balanceVisible && "blur-sm")}>
+                      {formatCurrency(userStats.totalWithdrawals)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                  <CardDescription>Common tasks and operations</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('wallet')}
+                    disabled={!accountStatus.depositEnabled}
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Deposit Funds
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('wallet')}
+                    disabled={!accountStatus.withdrawalEnabled}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Withdraw Funds
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('trading')}
+                    disabled={!accountStatus.tradingEnabled}
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Configure Trading
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('verification')}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Verify Account
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity Preview */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Your latest transactions and activities</CardDescription>
+                  </div>
+                  <Button variant="outline" onClick={() => setActiveTab('history')}>
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Deposit via Bank Transfer</p>
+                        <p className="text-sm text-muted-foreground">2 hours ago</p>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-green-600">+$5,000</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <ArrowUpDown className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Automated Trade Executed</p>
+                        <p className="text-sm text-muted-foreground">5 hours ago</p>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-blue-600">BTC/USD</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <TrendingUp className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Strategy Performance Update</p>
+                        <p className="text-sm text-muted-foreground">1 day ago</p>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-green-600">+12.5%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Wallet Tab */}
+          <TabsContent value="wallet" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DepositInterface />
+              <WithdrawalInterface />
+            </div>
+          </TabsContent>
+
+          {/* Banking Tab */}
+          <TabsContent value="banking">
+            <BankAccountManager />
+          </TabsContent>
+
+          {/* Trading Tab */}
+          <TabsContent value="trading">
+            <AutomatedTradingConfig />
+          </TabsContent>
+
+          {/* Automation Tab */}
+          <TabsContent value="automation" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Bot className="h-5 w-5" />
+                  <span>Workflow Automation</span>
+                </CardTitle>
+                <CardDescription>
+                  Manage your automated trading workflows and strategies
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Workflow Status Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Active Workflows</p>
+                          <p className="text-2xl font-bold">{activeWorkflows}</p>
+                        </div>
+                        <PlayCircle className="h-8 w-8 text-green-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <p className={`text-lg font-semibold ${
+                            workflowStatus === 'running' ? 'text-green-600' : 
+                            workflowStatus === 'paused' ? 'text-yellow-600' : 'text-gray-600'
+                          }`}>
+                            {workflowStatus === 'running' ? 'Running' : 
+                             workflowStatus === 'paused' ? 'Paused' : 'Idle'}
+                          </p>
+                        </div>
+                        <div className={`h-3 w-3 rounded-full ${
+                          workflowStatus === 'running' ? 'bg-green-500' : 
+                          workflowStatus === 'paused' ? 'bg-yellow-500' : 'bg-gray-400'
+                        }`} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Total Profit</p>
+                          <p className="text-2xl font-bold text-green-600">+$2,847</p>
+                        </div>
+                        <TrendingUp className="h-8 w-8 text-green-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex items-center space-x-4">
+                  <Button
+                    onClick={() => {
+                      const newStatus = workflowStatus === 'running' ? 'paused' : 'running';
+                      setWorkflowStatus(newStatus);
+                      toast.success(`Workflows ${newStatus === 'running' ? 'started' : 'paused'}`);
+                    }}
+                    className={workflowStatus === 'running' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'}
+                  >
+                    {workflowStatus === 'running' ? (
+                      <><PauseCircle className="h-4 w-4 mr-2" />Pause All</>
+                    ) : (
+                      <><PlayCircle className="h-4 w-4 mr-2" />Start All</>
+                    )}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setWorkflowStatus('idle');
+                      toast.success('All workflows stopped');
+                    }}
+                  >
+                    <StopCircle className="h-4 w-4 mr-2" />
+                    Stop All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/automation/builder')}
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    Create Workflow
+                  </Button>
+                </div>
+
+                {/* Active Workflows List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Active Workflows</h3>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((workflow) => (
+                      <Card key={workflow}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`h-3 w-3 rounded-full ${
+                                workflowStatus === 'running' ? 'bg-green-500' : 
+                                workflowStatus === 'paused' ? 'bg-yellow-500' : 'bg-gray-400'
+                              }`} />
+                              <div>
+                                <p className="font-medium">BTC Scalping Strategy #{workflow}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Last executed: 2 minutes ago • Profit: +$127.50
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button variant="outline" size="sm">
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <BarChart className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* KYC Verification Tab */}
+          <TabsContent value="verification">
+            <KYCVerification />
+          </TabsContent>
+
+          {/* Transaction History Tab */}
+          <TabsContent value="history">
+            <TransactionHistory />
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <FinancialUserProfile />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

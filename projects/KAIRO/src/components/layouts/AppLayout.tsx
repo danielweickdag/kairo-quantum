@@ -46,7 +46,7 @@ export default function AppLayout({ children, requireAuth = true }: AppLayoutPro
       <Navigation />
       
       {/* Main content area with proper spacing for navigation */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 lg:pt-16">
         {/* Content wrapper with padding */}
         <main className="min-h-screen">
           {children}

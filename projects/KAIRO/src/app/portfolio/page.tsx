@@ -23,6 +23,19 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
+} from 'recharts';
 
 interface Position {
   id: string;
@@ -68,6 +81,61 @@ export default function PortfolioPage() {
   const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'>('1M');
   const [loading, setLoading] = useState(true);
   const [hideBalances, setHideBalances] = useState(false);
+
+  // Sample portfolio allocation data
+  const portfolioAllocation = [
+    { name: 'Technology', value: 35, amount: 52500, color: '#3B82F6' },
+    { name: 'Healthcare', value: 20, amount: 30000, color: '#10B981' },
+    { name: 'Finance', value: 15, amount: 22500, color: '#F59E0B' },
+    { name: 'Energy', value: 12, amount: 18000, color: '#EF4444' },
+    { name: 'Consumer Goods', value: 10, amount: 15000, color: '#8B5CF6' },
+    { name: 'Real Estate', value: 8, amount: 12000, color: '#06B6D4' }
+  ];
+
+  // Sample performance data
+  const performanceData = {
+    '1D': [
+      { time: '09:30', value: 148500 },
+      { time: '10:00', value: 149200 },
+      { time: '11:00', value: 148800 },
+      { time: '12:00', value: 149500 },
+      { time: '13:00', value: 150200 },
+      { time: '14:00', value: 149800 },
+      { time: '15:00', value: 150500 },
+      { time: '16:00', value: 150000 }
+    ],
+    '1W': [
+      { time: 'Mon', value: 145000 },
+      { time: 'Tue', value: 147000 },
+      { time: 'Wed', value: 148500 },
+      { time: 'Thu', value: 149200 },
+      { time: 'Fri', value: 150000 }
+    ],
+    '1M': [
+      { time: 'Week 1', value: 140000 },
+      { time: 'Week 2', value: 142500 },
+      { time: 'Week 3', value: 145000 },
+      { time: 'Week 4', value: 150000 }
+    ],
+    '3M': [
+      { time: 'Month 1', value: 135000 },
+      { time: 'Month 2', value: 142000 },
+      { time: 'Month 3', value: 150000 }
+    ],
+    '1Y': [
+      { time: 'Q1', value: 120000 },
+      { time: 'Q2', value: 130000 },
+      { time: 'Q3', value: 140000 },
+      { time: 'Q4', value: 150000 }
+    ],
+    'ALL': [
+      { time: '2022', value: 100000 },
+      { time: '2023', value: 125000 },
+      { time: '2024', value: 150000 }
+    ]
+  };
+
+  const currentPerformanceData = performanceData[timeframe as keyof typeof performanceData];
 
   // Mock portfolio data
   const [portfolioStats, setPortfolioStats] = useState<PortfolioStats>({
@@ -545,9 +613,62 @@ export default function PortfolioPage() {
             {/* Portfolio Allocation Chart */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Portfolio Allocation</h3>
-              <div className="h-64 flex items-center justify-center">
-                <PieChart className="h-16 w-16 text-gray-400" />
-                <span className="ml-4 text-gray-500 dark:text-gray-400">Chart visualization would go here</span>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={portfolioAllocation}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {portfolioAllocation.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: any, name: any) => [
+                        `${value}%`,
+                        name
+                      ]}
+                      labelFormatter={(label) => `${label}`}
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Allocation Legend */}
+              <div className="mt-4 space-y-2">
+                {portfolioAllocation.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {item.name}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(item.amount)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.value}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -571,9 +692,47 @@ export default function PortfolioPage() {
                   ))}
                 </div>
               </div>
-              <div className="h-64 flex items-center justify-center">
-                <BarChart3 className="h-16 w-16 text-gray-400" />
-                <span className="ml-4 text-gray-500 dark:text-gray-400">Performance chart would go here</span>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={currentPerformanceData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <XAxis
+                      dataKey="time"
+                      stroke="#6B7280"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#6B7280"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: any) => [
+                        formatCurrency(value),
+                        'Portfolio Value'
+                      ]}
+                      labelFormatter={(label) => `Time: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#3B82F6"
+                      strokeWidth={2}
+                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
 

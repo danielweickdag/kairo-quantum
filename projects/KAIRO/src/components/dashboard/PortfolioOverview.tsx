@@ -163,7 +163,12 @@ export default function PortfolioOverview() {
   ]);
 
   const [loading, setLoading] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Initialize lastUpdate on client side only to prevent hydration mismatch
+  useEffect(() => {
+    setLastUpdate(new Date());
+  }, []);
 
   const refreshData = async () => {
     setLoading(true);
@@ -201,7 +206,7 @@ export default function PortfolioOverview() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Portfolio Overview</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Last updated: {lastUpdate.toLocaleTimeString()}
+            Last updated: {lastUpdate ? lastUpdate.toLocaleTimeString() : 'Loading...'}
           </p>
         </div>
         <button

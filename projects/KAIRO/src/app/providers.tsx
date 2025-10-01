@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { BrokerAccountProvider } from '@/contexts/BrokerAccountContext';
 import { TradingModeProvider } from '@/contexts/TradingModeContext';
+import { WorkflowProvider } from '@/contexts/WorkflowContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +29,9 @@ export function Providers({ children }: ProvidersProps) {
         <AuthProvider>
           <BrokerAccountProvider>
             <TradingModeProvider>
-              {children}
+              <WorkflowProvider>
+                {children}
+              </WorkflowProvider>
             </TradingModeProvider>
           </BrokerAccountProvider>
         </AuthProvider>

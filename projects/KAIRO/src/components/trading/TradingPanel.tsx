@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // Note: Select, ScrollArea, and Separator components not available - using alternatives
 import { Progress } from '@/components/ui/progress';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import TradingViewChart from './TradingViewChart';
+import RiskManagementDashboard from './RiskManagementDashboard';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -23,7 +24,11 @@ import {
   Settings,
   Zap,
   Eye,
-  EyeOff
+  EyeOff,
+  X,
+  Maximize2,
+  Minimize2,
+  Shield
 } from 'lucide-react';
 import { 
   liveMarketService, 
@@ -72,11 +77,17 @@ interface LocalOrder {
 interface TradingPanelProps {
   className?: string;
   defaultSymbol?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
+  isModal?: boolean;
 }
 
 const TradingPanel: React.FC<TradingPanelProps> = ({ 
   className = '',
-  defaultSymbol = 'BTCUSDT'
+  defaultSymbol = 'BTCUSDT',
+  isOpen = true,
+  onClose,
+  isModal = false
 }) => {
   const { isPaperTrading } = useTradingMode();
   const [selectedSymbol, setSelectedSymbol] = useState(defaultSymbol);
@@ -103,6 +114,7 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
   const [isTrading, setIsTrading] = useState(false);
   const [showOrderBook, setShowOrderBook] = useState(true);
   const [chartTimeframe, setChartTimeframe] = useState('1m');
+  const [activeTab, setActiveTab] = useState('trading');
   
   // Market data hooks
   const marketData = useMarketData(selectedSymbol) as MarketTicker;
@@ -266,21 +278,35 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
     }).format(amount);
   };
 
-  // Prepare chart data
-  const chartData = candlestickData.map(candle => ({
-    time: new Date(candle.time).toLocaleTimeString(),
-    price: candle.close,
-    volume: candle.volume
-  }));
+  // Chart data is now handled by TradingViewChart component
 
-  return (
+  // Don't render if modal is closed
+  if (isModal && !isOpen) {
+    return null;
+  }
+
+  const content = (
     <div className={`w-full space-y-2 sm:space-y-4 ${className}`}>
       {/* Demo Mode Banner */}
       {isPaperTrading && (
         <DemoModeIndicator variant="banner" />
       )}
       
-      {/* Header with Symbol Selector and Market Stats */}
+      {/* Main Navigation Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="trading" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Trading
+          </TabsTrigger>
+          <TabsTrigger value="risk" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Risk Management
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="trading" className="space-y-2 sm:space-y-4">
+          {/* Header with Symbol Selector and Market Stats */}
       <div className="flex flex-col lg:flex-row gap-2 sm:gap-4">
         <Card className="flex-1">
           <CardHeader className="pb-2 sm:pb-3">
@@ -411,40 +437,14 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-2 sm:pt-6">
-            <div className="h-48 sm:h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis 
-                    dataKey="time" 
-                    tick={{ fontSize: 10 }}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    domain={['dataMin - 10', 'dataMax + 10']}
-                    tick={{ fontSize: 10 }}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      fontSize: '12px'
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="price"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.1}
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+          <CardContent className="p-0">
+            <TradingViewChart 
+              symbol={selectedSymbol}
+              interval={chartTimeframe}
+              height={320}
+              theme="dark"
+              autosize={false}
+            />
           </CardContent>
         </Card>
 
@@ -789,8 +789,54 @@ const TradingPanel: React.FC<TradingPanelProps> = ({
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+        
+        <TabsContent value="risk" className="space-y-2 sm:space-y-4">
+          <RiskManagementDashboard 
+            accountBalance={balance}
+            positions={displayPositions.map(pos => ({
+              symbol: pos.symbol,
+              quantity: pos.size,
+              side: pos.side,
+              entryPrice: pos.entryPrice,
+              currentPrice: pos.currentPrice,
+              unrealizedPnL: pos.pnl
+            }))}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
+
+  // Return modal wrapper if isModal is true
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Advanced Trading Panel</h2>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-gray-600 dark:text-gray-400"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          {/* Modal Content */}
+          <div className="flex-1 overflow-auto p-4">
+            {content}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 };
 
 export default TradingPanel;

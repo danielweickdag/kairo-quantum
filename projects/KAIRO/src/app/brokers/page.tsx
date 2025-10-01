@@ -274,25 +274,80 @@ export default function BrokersPage() {
 
         {/* Connections Grid */}
         {connections.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="mx-auto h-24 w-24 text-gray-400">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+          <div className="space-y-8">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Choose Your Broker
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Select a brokerage to connect and start live trading
+              </p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-              No broker connections
-            </h3>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">
-              Connect your first brokerage account to start live trading
-            </p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Connection
-            </button>
+            
+            {/* Broker Selection Grid */}
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {supportedBrokers.filter(broker => broker.isEnabled).map((broker) => (
+                <div
+                  key={broker.type}
+                  onClick={() => {
+                    setSelectedBroker(broker);
+                    setShowAddModal(true);
+                  }}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 group"
+                >
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4 group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-200">
+                      <span className="text-lg font-bold text-white">
+                        {broker.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                        {broker.name}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {broker.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {broker.capabilities.supportsStocks && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          Stocks
+                        </span>
+                      )}
+                      {broker.capabilities.supportsCrypto && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          Crypto
+                        </span>
+                      )}
+                      {broker.capabilities.supportsOptions && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          Options
+                        </span>
+                      )}
+                      {broker.capabilities.supportsForex && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          Forex
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Commission: ${broker.capabilities.commissionStructure.stocks}/trade
+                      </div>
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200">
+                        <span className="text-sm font-medium mr-1">Connect</span>
+                        <ExternalLink className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -403,6 +458,7 @@ export default function BrokersPage() {
         {showAddModal && (
           <AddConnectionModal
             supportedBrokers={supportedBrokers}
+            preSelectedBroker={selectedBroker}
             onClose={() => {
               setShowAddModal(false);
               setSelectedBroker(null);
@@ -423,13 +479,14 @@ export default function BrokersPage() {
 // Add Connection Modal Component
 interface AddConnectionModalProps {
   supportedBrokers: SupportedBroker[];
+  preSelectedBroker?: SupportedBroker | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-function AddConnectionModal({ supportedBrokers, onClose, onSuccess }: AddConnectionModalProps) {
-  const [step, setStep] = useState<'select' | 'configure'>('select');
-  const [selectedBroker, setSelectedBroker] = useState<SupportedBroker | null>(null);
+function AddConnectionModal({ supportedBrokers, preSelectedBroker, onClose, onSuccess }: AddConnectionModalProps) {
+  const [step, setStep] = useState<'select' | 'configure'>(preSelectedBroker ? 'configure' : 'select');
+  const [selectedBroker, setSelectedBroker] = useState<SupportedBroker | null>(preSelectedBroker || null);
   const [formData, setFormData] = useState({
     accountName: '',
     apiKey: '',

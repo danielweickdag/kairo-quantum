@@ -41,6 +41,8 @@ import {
   X,
   Plus,
   Minus,
+  ArrowUpRight,
+  ArrowDownLeft,
   RefreshCw,
   Download,
   Upload,
@@ -67,6 +69,11 @@ import {
   Menu
 } from 'lucide-react'
 import { cn, formatCurrency as utilsFormatCurrency, formatPercent as utilsFormatPercent } from '@/lib/utils'
+import automatedWorkflowService from '@/services/AutomatedWorkflowService'
+import { useBalance } from '@/hooks/useBalance'
+import ScheduledTransactionsTab from './ScheduledTransactionsTab'
+import BankAccountManagement from './BankAccountManagement'
+import { alertService } from '@/services/alertService'
 
 interface PortfolioData {
   totalValue: number
@@ -121,10 +128,19 @@ const UserDashboard: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isAutoRebalancing, setIsAutoRebalancing] = useState(false)
-  const [realTimeUpdates, setRealTimeUpdates] = useState(false)
-  const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [realTimeUpdates, setRealTimeUpdates] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [autoTradeEnabled, setAutoTradeEnabled] = useState(false)
   const [pendingTrades, setPendingTrades] = useState<string[]>([])
+  const [autoCopyTradeEnabled, setAutoCopyTradeEnabled] = useState(false)
+  const [riskManagementEnabled, setRiskManagementEnabled] = useState(true)
+  const [smartAlertsEnabled, setSmartAlertsEnabled] = useState(true)
+  const [aiInsightsEnabled, setAiInsightsEnabled] = useState(true)
+  const [portfolioOptimizationEnabled, setPortfolioOptimizationEnabled] = useState(false)
+  const [advancedAnalyticsEnabled, setAdvancedAnalyticsEnabled] = useState(true)
+  
+  // Real-time balance tracking
+  const { balance, formattedBalance, isLoading: balanceLoading } = useBalance()
   
   // Mock data - in real app, this would come from API
   const [portfolioData, setPortfolioData] = useState<PortfolioData>({
@@ -241,6 +257,11 @@ const UserDashboard: React.FC = () => {
     twoFactorEnabled: true
   })
 
+  // Initialize lastUpdate on client side only to prevent hydration mismatch
+  useEffect(() => {
+    setLastUpdate(new Date())
+  }, [])
+
   // Real-time updates effect
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -320,6 +341,78 @@ const UserDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Top Navigation Bar */}
+        <div className="bg-gray-800/30 backdrop-blur-xl rounded-xl border border-gray-700/50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-white">KAIRO</span>
+              <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 ml-2">
+                Demo Mode
+              </Badge>
+            </div>
+            
+            <div className="flex items-center space-x-2 overflow-x-auto">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/dashboard', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/trading', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Trading
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/portfolio', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <PieChart className="w-4 h-4 mr-2" />
+                Portfolio
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/copy-trade', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Copy Trade
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/automation', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Automation
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/settings', '_self')}
+                className="text-gray-300 hover:text-white hover:bg-gray-700/50 whitespace-nowrap"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
@@ -332,17 +425,69 @@ const UserDashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
+            {/* Quick Fund Management Buttons */}
+            <Button 
+              onClick={async () => {
+                try {
+                  await automatedWorkflowService.manualDeposit(1000, 'bank');
+                } catch (error) {
+                  console.error('Quick deposit failed:', error);
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Quick Deposit
+            </Button>
+            <Button 
+              onClick={async () => {
+                try {
+                  await automatedWorkflowService.manualWithdraw(500, 'bank');
+                } catch (error) {
+                  console.error('Quick withdrawal failed:', error);
+                }
+              }}
+              variant="outline" 
+              className="border-blue-600 text-blue-300 hover:bg-blue-600/20"
+            >
+              <Minus className="w-4 h-4 mr-2" />
+              Quick Withdraw
+            </Button>
             <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
               <Download className="w-4 h-4 mr-2" />
               Export Data
             </Button>
-            <Button 
-              onClick={() => window.open('/trading', '_blank')}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Trade
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className={cn(
+                  "border-gray-600",
+                  realTimeUpdates 
+                    ? "border-green-500 bg-green-500/20 text-green-300" 
+                    : "text-gray-300 hover:bg-gray-700"
+                )}
+                onClick={() => {
+                  setRealTimeUpdates(!realTimeUpdates)
+                  setLastUpdate(new Date())
+                  if (!realTimeUpdates) {
+                    alert('Real-time updates enabled')
+                  } else {
+                    alert('Real-time updates disabled')
+                  }
+                }}
+              >
+                <RefreshCw className={cn("w-4 h-4 mr-2", realTimeUpdates && "animate-spin")} />
+                {realTimeUpdates ? 'Live' : 'Refresh'}
+              </Button>
+              <Button
+                onClick={() => window.open('/trading', '_blank')}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Trade
+              </Button>
+            </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 text-gray-400 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
@@ -375,7 +520,8 @@ const UserDashboard: React.FC = () => {
               <div>
                 <p className="text-gray-400 text-sm mb-1">Total Portfolio Value</p>
                 <p className="text-2xl font-bold text-white">
-                  {balanceVisible ? formatCurrency(portfolioData.totalValue) : '••••••'}
+                  {balanceVisible ? formattedBalance.total : '••••••'}
+                  {balanceLoading && <span className="ml-2 text-sm text-gray-400">updating...</span>}
                 </p>
                 <div className="flex items-center mt-2">
                   <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
@@ -453,6 +599,35 @@ const UserDashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Balance Breakdown Card */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-green-400" />
+                </div>
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                  Live
+                </Badge>
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm mb-1">Available Balance</p>
+                <p className="text-xl font-bold text-white">
+                  {balanceVisible ? formattedBalance.available : '••••••'}
+                  {balanceLoading && <span className="ml-2 text-xs text-gray-400">updating...</span>}
+                </p>
+                <p className="text-gray-400 text-sm mt-3 mb-1">Invested Amount</p>
+                <p className="text-lg font-semibold text-white">
+                  {balanceVisible ? formattedBalance.invested : '••••••'}
+                </p>
+                <p className="text-gray-400 text-sm mt-3 mb-1">Pending Deposits</p>
+                <p className="text-lg font-semibold text-blue-400">
+                  {balanceVisible ? balance.pendingDeposits.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '••••••'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Tabs */}
@@ -469,6 +644,10 @@ const UserDashboard: React.FC = () => {
             <TabsTrigger value="copy-trading" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
               <Users className="w-4 h-4 mr-2" />
               Copy Trading
+            </TabsTrigger>
+            <TabsTrigger value="scheduled" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+              <Calendar className="w-4 h-4 mr-2" />
+              Scheduled
             </TabsTrigger>
             <TabsTrigger value="subscription" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
               <Crown className="w-4 h-4 mr-2" />
@@ -617,7 +796,7 @@ const UserDashboard: React.FC = () => {
                      <Zap className="w-5 h-5 text-yellow-400 mr-2" />
                      Quick Actions & Automation
                    </div>
-                   {realTimeUpdates && (
+                   {realTimeUpdates && lastUpdate && (
                      <div className="flex items-center text-xs text-blue-400">
                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse mr-2" />
                        Last update: {lastUpdate.toLocaleTimeString()}
@@ -699,23 +878,138 @@ const UserDashboard: React.FC = () => {
                      </Button>
                      <Button 
                        variant="outline" 
-                       className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                       className={cn(
+                         "w-full",
+                         autoCopyTradeEnabled 
+                           ? "border-purple-500 bg-purple-500/20 text-purple-300" 
+                           : "border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                       )}
                        onClick={() => {
-                         alert('Copy trading automation enabled for top performers')
+                         setAutoCopyTradeEnabled(!autoCopyTradeEnabled)
+                         if (!autoCopyTradeEnabled) {
+                           alert('Auto copy trading enabled for top performers')
+                         } else {
+                           alert('Auto copy trading disabled')
+                         }
                        }}
                      >
-                       <Copy className="w-4 h-4 mr-2" />
-                       Auto Copy Trade
+                       <Copy className={cn("w-4 h-4 mr-2", autoCopyTradeEnabled && "animate-pulse")} />
+                       {autoCopyTradeEnabled ? 'Auto Copy ON' : 'Auto Copy Trade'}
                      </Button>
                     <Button 
                       variant="outline" 
-                      className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      className={cn(
+                        "w-full",
+                        riskManagementEnabled 
+                          ? "border-orange-500 bg-orange-500/20 text-orange-300" 
+                          : "border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      )}
                       onClick={() => {
-                        alert('Risk management alerts activated')
+                        setRiskManagementEnabled(!riskManagementEnabled)
+                        if (!riskManagementEnabled) {
+                          alert('Risk management system activated')
+                        } else {
+                          alert('Risk management system disabled')
+                        }
                       }}
                     >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Risk Management
+                      <Shield className={cn("w-4 h-4 mr-2", riskManagementEnabled && "animate-pulse")} />
+                      {riskManagementEnabled ? 'Risk Mgmt ON' : 'Risk Management'}
+                    </Button>
+                  </div>
+                  
+                  {/* AI & Analytics Features */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-2">AI & Analytics</h4>
+                    <Button 
+                      variant="outline" 
+                      className={cn(
+                        "w-full",
+                        aiInsightsEnabled 
+                          ? "border-blue-500 bg-blue-500/20 text-blue-300" 
+                          : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                      )}
+                      onClick={() => {
+                        setAiInsightsEnabled(!aiInsightsEnabled)
+                        if (!aiInsightsEnabled) {
+                          alert('AI insights and recommendations activated')
+                        } else {
+                          alert('AI insights disabled')
+                        }
+                      }}
+                    >
+                      <Brain className={cn("w-4 h-4 mr-2", aiInsightsEnabled && "animate-pulse")} />
+                      {aiInsightsEnabled ? 'AI Insights ON' : 'Enable AI Insights'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className={cn(
+                        "w-full",
+                        smartAlertsEnabled 
+                          ? "border-yellow-500 bg-yellow-500/20 text-yellow-300" 
+                          : "border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                      )}
+                      onClick={async () => {
+                        if (!smartAlertsEnabled) {
+                          try {
+                            const success = await alertService.enableAlerts();
+                            if (success) {
+                              setSmartAlertsEnabled(true);
+                              alert('Smart alerts and notifications enabled');
+                            } else {
+                              alert('Failed to enable alerts. Please check your browser settings.');
+                            }
+                          } catch (error) {
+                            alert('Failed to enable alerts. Please check your browser settings.');
+                          }
+                        } else {
+                          setSmartAlertsEnabled(false);
+                          alert('Smart alerts disabled');
+                        }
+                      }}
+                    >
+                      <Bell className={cn("w-4 h-4 mr-2", smartAlertsEnabled && "animate-pulse")} />
+                      {smartAlertsEnabled ? 'Smart Alerts ON' : 'Smart Alerts'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className={cn(
+                        "w-full",
+                        portfolioOptimizationEnabled 
+                          ? "border-green-500 bg-green-500/20 text-green-300" 
+                          : "border-green-500/30 text-green-400 hover:bg-green-500/10"
+                      )}
+                      onClick={() => {
+                        setPortfolioOptimizationEnabled(!portfolioOptimizationEnabled)
+                        if (!portfolioOptimizationEnabled) {
+                          alert('Portfolio optimization engine activated')
+                        } else {
+                          alert('Portfolio optimization disabled')
+                        }
+                      }}
+                    >
+                      <Target className={cn("w-4 h-4 mr-2", portfolioOptimizationEnabled && "animate-pulse")} />
+                      {portfolioOptimizationEnabled ? 'Optimization ON' : 'Portfolio Optimizer'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className={cn(
+                        "w-full",
+                        advancedAnalyticsEnabled 
+                          ? "border-purple-500 bg-purple-500/20 text-purple-300" 
+                          : "border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                      )}
+                      onClick={() => {
+                        setAdvancedAnalyticsEnabled(!advancedAnalyticsEnabled)
+                        if (!advancedAnalyticsEnabled) {
+                          alert('Advanced analytics and reporting enabled')
+                        } else {
+                          alert('Advanced analytics disabled')
+                        }
+                      }}
+                    >
+                      <BarChart3 className={cn("w-4 h-4 mr-2", advancedAnalyticsEnabled && "animate-pulse")} />
+                      {advancedAnalyticsEnabled ? 'Analytics ON' : 'Advanced Analytics'}
                     </Button>
                   </div>
                   
@@ -1048,6 +1342,16 @@ const UserDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Bank Account Management */}
+            <div className="mt-8">
+              <BankAccountManagement />
+            </div>
+          </TabsContent>
+
+          {/* Scheduled Transactions Tab */}
+          <TabsContent value="scheduled" className="space-y-6">
+            <ScheduledTransactionsTab />
           </TabsContent>
 
           {/* Profile Tab */}

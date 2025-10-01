@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, AlertTriangle, BarChart3, Settings, Plus, Minus, Target, Shield, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, AlertTriangle, BarChart3, Settings, Plus, Minus, Target, Shield, Clock, Zap, ArrowUp, ArrowDown, X } from 'lucide-react';
 
 interface FuturesContract {
   id: string;
@@ -44,6 +44,10 @@ interface OrderForm {
   stopPrice?: number;
   leverage: number;
   reduceOnly: boolean;
+  stopLoss?: number;
+  takeProfit?: number;
+  trailingStop?: number;
+  autoClose?: boolean;
 }
 
 const FuturesTrading: React.FC = () => {
@@ -56,13 +60,19 @@ const FuturesTrading: React.FC = () => {
     orderType: 'MARKET',
     quantity: 1,
     leverage: 1,
-    reduceOnly: false
+    reduceOnly: false,
+    stopLoss: undefined,
+    takeProfit: undefined,
+    trailingStop: undefined,
+    autoClose: false
   });
   const [accountBalance, setAccountBalance] = useState(50000);
   const [totalMargin, setTotalMargin] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(50000);
   const [selectedTab, setSelectedTab] = useState<'contracts' | 'positions' | 'orders'>('contracts');
   const [filterSector, setFilterSector] = useState<string>('all');
+  const [quickTradeMode, setQuickTradeMode] = useState<boolean>(false);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
 
   // Mock futures contracts data
   const mockContracts: FuturesContract[] = [
@@ -397,6 +407,127 @@ const FuturesTrading: React.FC = () => {
     }
   }, [orderForm.contractId, contracts]);
 
+  // Auto-refresh market data
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      // Simulate price updates
+      setContracts(prev => prev.map(contract => ({
+        ...contract,
+        price: contract.price * (1 + (Math.random() - 0.5) * 0.02), // ±1% random change
+        change: contract.price * (Math.random() - 0.5) * 0.02,
+        changePercent: (Math.random() - 0.5) * 2
+      })));
+      
+      // Update position P&L
+      setPositions(prev => prev.map(position => {
+        const contract = contracts.find(c => c.id === position.contractId);
+        if (!contract) return position;
+        
+        const priceDiff = contract.price - position.entryPrice;
+        const unrealizedPnL = position.side === 'LONG' 
+          ? priceDiff * position.quantity * contract.contractSize
+          : -priceDiff * position.quantity * contract.contractSize;
+        
+        return {
+          ...position,
+          currentPrice: contract.price,
+          unrealizedPnL
+        };
+      }));
+    }, 5000); // Update every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [autoRefresh, contracts]);
+
+  // Position monitoring and alerts
+  useEffect(() => {
+    positions.forEach(position => {
+      const pnlPercent = (position.unrealizedPnL / position.margin) * 100;
+      
+      // Alert for significant losses
+      if (pnlPercent < -50) {
+        console.warn(`⚠️ Position ${position.symbol} is down ${pnlPercent.toFixed(1)}%`);
+      }
+      
+      // Alert for significant gains
+      if (pnlPercent > 100) {
+        console.log(`🎉 Position ${position.symbol} is up ${pnlPercent.toFixed(1)}%`);
+      }
+      
+      // Alert for approaching liquidation
+      const liquidationDistance = Math.abs(position.currentPrice - position.liquidationPrice) / position.currentPrice;
+      if (liquidationDistance < 0.1) { // Within 10% of liquidation
+        console.error(`🚨 Position ${position.symbol} approaching liquidation!`);
+      }
+    });
+  }, [positions]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '1':
+            e.preventDefault();
+            setSelectedTab('contracts');
+            break;
+          case '2':
+            e.preventDefault();
+            setSelectedTab('positions');
+            break;
+          case '3':
+            e.preventDefault();
+            setSelectedTab('orders');
+            break;
+          case 'q':
+            e.preventDefault();
+            setQuickTradeMode(!quickTradeMode);
+            break;
+          case 'r':
+            e.preventDefault();
+            setAutoRefresh(!autoRefresh);
+            break;
+          case 'Enter':
+            e.preventDefault();
+            if (selectedContract) {
+              handleSubmitOrder();
+            }
+            break;
+        }
+      }
+      
+      // Quick trade shortcuts (when quick trade mode is enabled)
+      if (quickTradeMode && selectedContract) {
+        switch (e.key) {
+          case 'b':
+          case 'B':
+            e.preventDefault();
+            setOrderForm(prev => ({ ...prev, side: 'LONG' }));
+            break;
+          case 's':
+          case 'S':
+            e.preventDefault();
+            setOrderForm(prev => ({ ...prev, side: 'SHORT' }));
+            break;
+          case '+':
+          case '=':
+            e.preventDefault();
+            setOrderForm(prev => ({ ...prev, quantity: prev.quantity + 1 }));
+            break;
+          case '-':
+            e.preventDefault();
+            setOrderForm(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }));
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [quickTradeMode, selectedContract, autoRefresh]);
+
   // Calculate order value and margin
   const calculateOrderValue = () => {
     if (!selectedContract) return { value: 0, margin: 0 };
@@ -420,7 +551,7 @@ const FuturesTrading: React.FC = () => {
     
     // Simulate order execution
     const newPosition: Position = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       contractId: selectedContract.id,
       symbol: selectedContract.symbol,
       side: orderForm.side,
@@ -441,17 +572,57 @@ const FuturesTrading: React.FC = () => {
     setTotalMargin(prev => prev + margin);
     setAvailableBalance(prev => prev - margin);
     
-    // Reset form
-    setOrderForm({
-      contractId: '',
-      side: 'LONG',
-      orderType: 'MARKET',
-      quantity: 1,
-      leverage: 1,
-      reduceOnly: false
-    });
+    // Reset form only if not in quick trade mode
+     if (!quickTradeMode) {
+       setOrderForm({
+         contractId: '',
+         side: 'LONG',
+         orderType: 'MARKET',
+         quantity: 1,
+         leverage: 1,
+         reduceOnly: false,
+         stopLoss: undefined,
+         takeProfit: undefined,
+         trailingStop: undefined,
+         autoClose: false
+       });
+     }
     
     alert('Order executed successfully!');
+  };
+
+  // Quick trade function for one-click trading
+  const handleQuickTrade = (contract: FuturesContract, side: 'LONG' | 'SHORT', quantity: number = 1) => {
+    const margin = (contract.marginRequired * quantity) / orderForm.leverage;
+    
+    if (margin > availableBalance) {
+      alert('Insufficient margin available');
+      return;
+    }
+    
+    const newPosition: Position = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      contractId: contract.id,
+      symbol: contract.symbol,
+      side: side,
+      quantity: quantity,
+      entryPrice: contract.price,
+      currentPrice: contract.price,
+      unrealizedPnL: 0,
+      realizedPnL: 0,
+      margin: margin,
+      liquidationPrice: side === 'LONG' 
+        ? contract.price * 0.8 
+        : contract.price * 1.2,
+      openTime: new Date().toISOString(),
+      leverage: orderForm.leverage
+    };
+    
+    setPositions(prev => [...prev, newPosition]);
+    setTotalMargin(prev => prev + margin);
+    setAvailableBalance(prev => prev - margin);
+    
+    alert(`Quick ${side} order executed for ${contract.symbol}!`);
   };
 
   // Close position
@@ -501,9 +672,38 @@ const FuturesTrading: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Futures Trading
           </h1>
+          {quickTradeMode && (
+            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full text-xs font-medium">
+              Quick Trade Mode
+            </span>
+          )}
         </div>
         
         <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setQuickTradeMode(!quickTradeMode)}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                quickTradeMode
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+              title="Toggle Quick Trade Mode (Ctrl+Q)"
+            >
+              <Zap className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                autoRefresh
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+              title="Toggle Auto Refresh (Ctrl+R)"
+            >
+              <Clock className="h-4 w-4" />
+            </button>
+          </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <div>Account Balance: <span className="font-semibold text-gray-900 dark:text-white">${formatNumber(accountBalance)}</span></div>
             <div>Available: <span className="font-semibold text-green-600">${formatNumber(availableBalance)}</span></div>
@@ -512,27 +712,69 @@ const FuturesTrading: React.FC = () => {
         </div>
       </div>
 
+      {/* Keyboard Shortcuts Help */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <div className="text-sm text-blue-800 dark:text-blue-400">
+          <strong>Keyboard Shortcuts:</strong> Ctrl+1/2/3 (Switch tabs) | Ctrl+Q (Quick trade) | Ctrl+R (Auto refresh) | Ctrl+Enter (Submit order)
+          {quickTradeMode && " | B (Buy/Long) | S (Sell/Short) | +/- (Adjust quantity)"}
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex space-x-8">
-          {[
-            { id: 'contracts', label: 'Contracts', icon: Target },
-            { id: 'positions', label: 'Positions', icon: Shield },
-            { id: 'orders', label: 'Orders', icon: Clock }
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setSelectedTab(id as any)}
-              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                selectedTab === id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{label}</span>
-            </button>
-          ))}
+        <nav className="flex justify-between items-center">
+          <div className="flex space-x-8">
+            {[
+              { id: 'contracts', label: 'Contracts', icon: Target, count: filteredContracts.length },
+              { id: 'positions', label: 'Positions', icon: Shield, count: positions.length },
+              { id: 'orders', label: 'Orders', icon: Clock, count: 0 }
+            ].map(({ id, label, icon: Icon, count }) => (
+              <button
+                key={id}
+                onClick={() => setSelectedTab(id as any)}
+                className={`flex items-center space-x-2 py-2 px-3 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200 ${
+                  selectedTab === id
+                    ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800'
+                }`}
+                title={`Switch to ${label} (Ctrl+${id === 'contracts' ? '1' : id === 'positions' ? '2' : '3'})`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
+                {count > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    selectedTab === id
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          
+          {/* Quick Navigation */}
+          <div className="flex items-center space-x-2">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {selectedTab === 'contracts' && `${filteredContracts.length} contracts`}
+              {selectedTab === 'positions' && `${positions.length} open positions`}
+              {selectedTab === 'orders' && '0 pending orders'}
+            </div>
+            {selectedContract && (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                <span className="text-xs text-gray-600 dark:text-gray-300">Selected:</span>
+                <span className="text-xs font-medium text-gray-900 dark:text-white">{selectedContract.symbol}</span>
+                <button
+                  onClick={() => setSelectedContract(null)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  title="Clear selection"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
 
@@ -624,12 +866,32 @@ const FuturesTrading: React.FC = () => {
                           {new Date(contract.expiryDate).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-4">
-                          <button
-                            onClick={() => setOrderForm(prev => ({ ...prev, contractId: contract.id }))}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Trade
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => setOrderForm(prev => ({ ...prev, contractId: contract.id }))}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Trade
+                            </button>
+                            {quickTradeMode && (
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={() => handleQuickTrade(contract, 'LONG')}
+                                  className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded text-xs font-medium hover:bg-green-200 dark:hover:bg-green-900/40"
+                                  title="Quick Buy"
+                                >
+                                  B
+                                </button>
+                                <button
+                                  onClick={() => handleQuickTrade(contract, 'SHORT')}
+                                  className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 rounded text-xs font-medium hover:bg-red-200 dark:hover:bg-red-900/40"
+                                  title="Quick Sell"
+                                >
+                                  S
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -706,12 +968,28 @@ const FuturesTrading: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-4 py-4">
-                          <button
-                            onClick={() => closePosition(position.id)}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                          >
-                            Close
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => closePosition(position.id)}
+                              className="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 rounded text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/40"
+                              title="Close Position"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                const contract = contracts.find(c => c.id === position.contractId);
+                                if (contract) {
+                                  const oppositeSide = position.side === 'LONG' ? 'SHORT' : 'LONG';
+                                  handleQuickTrade(contract, oppositeSide, position.quantity);
+                                }
+                              }}
+                              className="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 rounded text-sm font-medium hover:bg-yellow-200 dark:hover:bg-yellow-900/40"
+                              title="Hedge Position"
+                            >
+                              ⚖️
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -808,6 +1086,71 @@ const FuturesTrading: React.FC = () => {
               </div>
             </div>
             
+            {/* Risk Management */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Risk Management</h4>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Stop Loss ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={orderForm.stopLoss || ''}
+                    onChange={(e) => setOrderForm(prev => ({ ...prev, stopLoss: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Auto-close at loss"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Take Profit ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={orderForm.takeProfit || ''}
+                    onChange={(e) => setOrderForm(prev => ({ ...prev, takeProfit: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Auto-close at profit"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Trailing Stop (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="50"
+                  value={orderForm.trailingStop || ''}
+                  onChange={(e) => setOrderForm(prev => ({ ...prev, trailingStop: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Dynamic stop loss"
+                />
+              </div>
+              
+              <div className="mt-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={orderForm.autoClose}
+                    onChange={(e) => setOrderForm(prev => ({ ...prev, autoClose: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                    Auto-close at market close
+                  </span>
+                </label>
+              </div>
+            </div>
+            
             {selectedContract && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-2">
                 <div className="text-sm">
@@ -837,13 +1180,33 @@ const FuturesTrading: React.FC = () => {
               </div>
             )}
             
-            <button
-              onClick={handleSubmitOrder}
-              disabled={!selectedContract || availableBalance < calculateOrderValue().margin}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              Place Order
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleSubmitOrder}
+                disabled={!selectedContract || availableBalance < calculateOrderValue().margin}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Place Order {quickTradeMode && '(Ctrl+Enter)'}
+              </button>
+              {orderForm.quantity > 1 && (
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => setOrderForm(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))}
+                    className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    title="Decrease quantity (-)"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setOrderForm(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
+                    className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    title="Increase quantity (+)"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

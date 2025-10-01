@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkflow } from '@/contexts/WorkflowContext';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import {
   TrendingUp,
@@ -25,7 +27,13 @@ import {
   Zap,
   Code,
   Target,
-  ArrowRight
+  ArrowRight,
+  Bot,
+  Shield,
+  Play,
+  Pause,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { tradingService, CreateTradeRequest } from '@/services/tradingService';
@@ -34,6 +42,7 @@ import BrokerAccountSelector from '@/components/BrokerAccountSelector';
 import { useBrokerAccount } from '@/contexts/BrokerAccountContext';
 import { liveMarketService, useMarketData } from '@/services/liveMarketService';
 import LiveChart from '@/components/trading/LiveChart';
+import TradingPanel from '@/components/trading/TradingPanel';
 
 interface MarketData {
   symbol: string;
@@ -65,9 +74,12 @@ interface Trade {
   status: 'pending' | 'filled' | 'cancelled';
 }
 
-export default function TradingPage() {
+function TradingContent() {
   const { user } = useAuth();
   const { selectedAccount: selectedBrokerAccount, setSelectedAccount: setSelectedBrokerAccount } = useBrokerAccount();
+  const { workflowState, executeWorkflow, receiveFromDashboard, updateWorkflowStatus, handleDeepLink, navigateToDashboard } = useWorkflow();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'market' | 'watchlist' | 'orders' | 'chart'>('market');
   const [selectedAsset, setSelectedAsset] = useState<string>('AAPL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,6 +92,8 @@ export default function TradingPage() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
   const [isLiveDataEnabled, setIsLiveDataEnabled] = useState(false);
+  const [workflowNotification, setWorkflowNotification] = useState<string | null>(null);
+  const [isTradingPanelOpen, setIsTradingPanelOpen] = useState(false);
   
   // Get live market data
   const liveMarketData = useMarketData();
@@ -212,6 +226,11 @@ export default function TradingPage() {
       
       // Enable live market data
       setIsLiveDataEnabled(true);
+      
+      // Ensure live market service is connected
+      if (!liveMarketService.isConnectedToMarket()) {
+        liveMarketService.connect();
+      }
     }
     
     return () => {
@@ -221,6 +240,91 @@ export default function TradingPage() {
       }
     };
   }, [user]);
+
+  // Handle workflow automation from dashboard
+  useEffect(() => {
+    if (!workflowState?.workflows) return;
+    
+    const workflowId = searchParams.get('workflow');
+    const trigger = searchParams.get('trigger');
+    
+    if (workflowId && trigger === 'dashboard') {
+      const workflow = workflowState.workflows.find((w: any) => w.id === workflowId);
+      if (workflow) {
+        setWorkflowNotification(`Workflow "${workflow.name}" activated from dashboard`);
+        
+        // Auto-configure trading parameters based on workflow
+        if (workflow.id === 'auto-stop-loss') {
+          setOrderType('stop');
+          setOrderSide('sell');
+          setWorkflowNotification('Auto Stop Loss workflow activated - Configure your stop loss parameters');
+        } else if (workflow.id === 'profit-taking') {
+          setOrderType('limit');
+          setOrderSide('sell');
+          setWorkflowNotification('Profit Taking workflow activated - Set your target profit price');
+        }
+        
+        // Update workflow status
+        updateWorkflowStatus(workflowId, 'active');
+        
+        // Clear notification after 5 seconds
+        setTimeout(() => setWorkflowNotification(null), 5000);
+      }
+    }
+  }, [searchParams, workflowState?.workflows, updateWorkflowStatus]);
+
+  // Get selected asset data with fallback
+  const selectedAssetData = marketData.find(asset => asset.symbol === selectedAsset) || 
+    // Fallback to ensure we always have data for the selected asset
+    {
+      symbol: selectedAsset,
+      name: selectedAsset,
+      price: 0,
+      change: 0,
+      changePercent: 0,
+      volume: 0,
+      marketCap: 0,
+      high24h: 0,
+      low24h: 0,
+      sector: 'Unknown',
+      type: 'stock' as const
+    };
+
+  // Listen for workflow triggers from dashboard
+  useEffect(() => {
+    if (!workflowState?.workflows) return;
+    
+    const handleWorkflowTrigger = (event: any) => {
+      if (event.source === 'dashboard') {
+        const workflow = workflowState.workflows.find((w: any) => w.id === event.workflowId);
+        if (workflow) {
+          receiveFromDashboard(event.workflowId, event.data);
+          setWorkflowNotification(`Executing workflow: ${workflow.name}`);
+          
+          // Auto-execute workflow if configured
+          if ((workflow as any).config?.autoExecute) {
+            executeWorkflow(event.workflowId, {
+              symbol: selectedAsset,
+              price: selectedAssetData.price,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+      }
+    };
+
+    // Listen for workflow events
+    window.addEventListener('workflow-trigger', handleWorkflowTrigger);
+    
+    return () => {
+      window.removeEventListener('workflow-trigger', handleWorkflowTrigger);
+    };
+  }, [workflowState?.workflows, receiveFromDashboard, executeWorkflow, selectedAsset, selectedAssetData?.price]);
+  
+  // Handle deep linking from dashboard
+  useEffect(() => {
+    handleDeepLink(searchParams);
+  }, [searchParams, handleDeepLink]);
   
   // Update market data with live data
   useEffect(() => {
@@ -269,8 +373,6 @@ export default function TradingPage() {
       setMarketData(updatedMarketData);
     }
   }, [liveMarketData]);
-
-  const selectedAssetData = marketData.find(asset => asset.symbol === selectedAsset);
 
   const filteredMarketData = marketData.filter(asset => 
     asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -596,7 +698,7 @@ export default function TradingPage() {
                   
                   {/* Live Chart */}
                    <div className="h-80 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                     {isLiveDataEnabled && selectedAssetData ? (
+                     {selectedAssetData ? (
                        <LiveChart 
                          symbol={selectedAsset}
                          timeframe={selectedTimeframe}
@@ -607,7 +709,11 @@ export default function TradingPage() {
                        <div className="h-full flex items-center justify-center">
                          <div className="text-center">
                            <LineChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                           <p className="text-gray-500 dark:text-gray-400">Connecting to live market data...</p>
+                           <p className="text-gray-500 dark:text-gray-400">
+                             {isLiveDataEnabled && liveMarketService.isConnectedToMarket() 
+                               ? 'Loading market data for selected asset...' 
+                               : 'Connecting to live market data...'}
+                           </p>
                            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
                              Real-time price data and technical indicators
                            </p>
@@ -657,17 +763,156 @@ export default function TradingPage() {
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <button
                       onClick={() => {
-                        setOrderQuantity('');
-                        setOrderPrice('');
-                        setOrderType('market');
-                        setOrderSide('buy');
-                        toast.success('Ready to place a new trade!');
+                        setIsTradingPanelOpen(true);
+                        toast.success('Opening advanced trading panel...');
                       }}
                       className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       New Trade
                     </button>
+                  </div>
+                  
+                  {/* Workflow Automation Panel */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Bot className="w-5 h-5 text-blue-500" />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Workflow Automation</h3>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {(workflowState?.activeWorkflows?.length || 0) > 0 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            {workflowState?.activeWorkflows?.length || 0} Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Workflow Notification */}
+                    {workflowNotification && (
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Bot className="w-4 h-4 text-blue-500" />
+                          <p className="text-sm text-blue-700 dark:text-blue-300">{workflowNotification}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Active Workflows */}
+                    {(workflowState?.activeWorkflows?.length || 0) > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Active Workflows</h4>
+                        <div className="space-y-2">
+                          {workflowState?.activeWorkflows?.map((workflow: any) => (
+                            <div key={workflow.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2">
+                                  {workflow.type === 'auto-stop-loss' && <Shield className="w-4 h-4 text-red-500" />}
+                                  {workflow.type === 'profit-taking' && <Target className="w-4 h-4 text-green-500" />}
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {workflow.name}
+                                  </span>
+                                </div>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  workflow.status === 'active' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : workflow.status === 'paused'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                                }`}>
+                                  {workflow.status}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => {
+                                    updateWorkflowStatus(workflow.id, workflow.status === 'active' ? 'paused' : 'active');
+                                    toast.success(`Workflow ${workflow.status === 'active' ? 'paused' : 'resumed'}`);
+                                  }}
+                                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                  {workflow.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    updateWorkflowStatus(workflow.id, 'stopped');
+                                    toast.success('Workflow stopped');
+                                  }}
+                                  className="p-1 text-red-500 hover:text-red-700"
+                                >
+                                  <AlertTriangle className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Workflow Actions */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Actions</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => {
+                            executeWorkflow('auto-stop-loss', {
+                              symbol: selectedAsset,
+                              stopLossPercentage: 5,
+                              autoExecute: true
+                            });
+                            toast.success('Auto Stop Loss activated');
+                          }}
+                          className="flex items-center justify-center space-x-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                        >
+                          <Shield className="w-4 h-4 text-red-500" />
+                          <span className="text-sm font-medium text-red-700 dark:text-red-300">Stop Loss</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            executeWorkflow('profit-taking', {
+                              symbol: selectedAsset,
+                              profitPercentage: 10,
+                              autoExecute: true
+                            });
+                            toast.success('Profit Taking activated');
+                          }}
+                          className="flex items-center justify-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                        >
+                          <Target className="w-4 h-4 text-green-500" />
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Take Profit</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Workflow Status */}
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between text-sm mb-3">
+                        <span className="text-gray-600 dark:text-gray-400">Automation Status</span>
+                        <span className={`font-medium ${
+                          (workflowState?.activeWorkflows?.length || 0) > 0
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}>
+                          {(workflowState?.activeWorkflows?.length || 0) > 0 ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      
+                      {/* Dashboard Navigation */}
+                      <button
+                        onClick={() => navigateToDashboard(undefined, {
+                          source: 'trading',
+                          currentAsset: selectedAsset,
+                          timestamp: Date.now()
+                        })}
+                        className="w-full flex items-center justify-center space-x-2 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                      >
+                        <Bot className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Manage Workflows</span>
+                        <ArrowRight className="w-4 h-4 text-purple-500" />
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Order Form */}
@@ -945,6 +1190,22 @@ export default function TradingPage() {
         </div>
       </div>
       </div>
+      
+      {/* Trading Panel Modal */}
+      <TradingPanel 
+        isOpen={isTradingPanelOpen}
+        onClose={() => setIsTradingPanelOpen(false)}
+        defaultSymbol={selectedAsset}
+        isModal={true}
+      />
     </AppLayout>
+  );
+}
+
+export default function TradingPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <TradingContent />
+    </Suspense>
   );
 }

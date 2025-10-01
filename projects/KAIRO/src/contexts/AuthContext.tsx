@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { alertService } from '@/services/alertService';
 
 interface User {
   id: string;
@@ -39,9 +40,8 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Configure axios defaults
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.kairoquantum.com';
-axios.defaults.baseURL = `${API_URL}/api`;
+// Configure axios defaults - use frontend API routes
+axios.defaults.baseURL = '/api';
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use(
@@ -136,6 +136,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       setUser(user);
       
+      // Ensure alerts are enabled for all users
+      try {
+        await alertService.enableAlerts();
+        console.log('Alerts enabled for user login');
+      } catch (error) {
+        console.warn('Failed to enable alerts for user:', error);
+      }
+      
       toast.success('Login successful!');
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed';
@@ -155,6 +163,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('refreshToken', refreshToken);
       }
       setUser(user);
+      
+      // Automatically enable alerts for new users
+      try {
+        await alertService.enableAlerts();
+        console.log('Alerts automatically enabled for new user');
+      } catch (error) {
+        console.warn('Failed to auto-enable alerts for new user:', error);
+      }
       
       toast.success('Registration successful!');
     } catch (error: any) {

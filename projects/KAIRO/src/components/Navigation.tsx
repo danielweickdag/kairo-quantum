@@ -33,8 +33,13 @@ import {
   Crown,
   Award,
   Bot,
-  Link
+  Link,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Plus,
+  Webhook
 } from 'lucide-react';
+import DepositWithdrawModal from '@/components/modals/DepositWithdrawModal';
 
 interface NavigationItem {
   name: string;
@@ -44,7 +49,8 @@ interface NavigationItem {
   description?: string;
 }
 
-const navigationItems: NavigationItem[] = [
+// All navigation items (available in user profile)
+const allNavigationItems: NavigationItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
@@ -68,6 +74,12 @@ const navigationItems: NavigationItem[] = [
     href: '/trading/live',
     icon: Radio,
     description: 'Real-time trading dashboard'
+  },
+  {
+    name: 'Trading Panel',
+    href: '/trading/panel',
+    icon: TrendingUp,
+    description: 'Advanced trading interface with live market data'
   },
   {
     name: 'Futures Trading',
@@ -197,6 +209,12 @@ const navigationItems: NavigationItem[] = [
     description: 'Automated user onboarding process'
   },
   {
+    name: 'Webhook Automation',
+    href: '/automation/webhooks',
+    icon: Webhook,
+    description: 'Automate payment events and subscription management'
+  },
+  {
     name: 'Brokers',
     href: '/brokers',
     icon: Link,
@@ -228,6 +246,12 @@ const navigationItems: NavigationItem[] = [
   }
 ];
 
+// Items to hide from main navigation but keep in profile
+const hiddenFromMainNav = ['Dashboard', 'User Dashboard', 'Trading', 'Live Trading', 'Futures Trading'];
+
+// Filtered navigation items for main navigation (excludes specified items)
+const navigationItems = allNavigationItems.filter(item => !hiddenFromMainNav.includes(item.name));
+
 export default function Navigation() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -238,6 +262,8 @@ export default function Navigation() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [focusedItemIndex, setFocusedItemIndex] = useState(-1);
+  const [isDepositWithdrawModalOpen, setIsDepositWithdrawModalOpen] = useState(false);
+  const [depositWithdrawMode, setDepositWithdrawMode] = useState<'deposit' | 'withdraw'>('deposit');
 
   useEffect(() => {
     setMounted(true);
@@ -267,13 +293,13 @@ export default function Navigation() {
   const handleNavigationKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setFocusedItemIndex(prev => (prev + 1) % navigationItems.length);
+      setFocusedItemIndex(prev => (prev + 1) % allNavigationItems.length);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setFocusedItemIndex(prev => prev <= 0 ? navigationItems.length - 1 : prev - 1);
+      setFocusedItemIndex(prev => prev <= 0 ? allNavigationItems.length - 1 : prev - 1);
     } else if (event.key === 'Enter' && focusedItemIndex >= 0) {
       event.preventDefault();
-      router.push(navigationItems[focusedItemIndex].href);
+      router.push(allNavigationItems[focusedItemIndex].href);
     } else if (event.key === 'Escape') {
       setIsProfileMenuOpen(false);
       setIsMobileMenuOpen(false);
@@ -290,6 +316,87 @@ export default function Navigation() {
 
   return (
     <>
+      {/* Desktop Top Navigation Bar */}
+      <div className="hidden lg:block lg:fixed lg:top-0 lg:left-64 lg:right-0 lg:h-16 lg:bg-white lg:dark:bg-gray-800 lg:border-b lg:border-gray-200 lg:dark:border-gray-700 lg:shadow-sm lg:z-40">
+        <div className="flex items-center justify-between h-full px-6">
+          <div className="flex items-center space-x-6">
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-expanded={isProfileMenuOpen}
+                aria-haspopup="menu"
+                aria-label="Quick navigation menu"
+              >
+                <Menu className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Menu</span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${
+                  isProfileMenuOpen ? 'rotate-180' : ''
+                }`} />
+              </button>
+              
+              {/* Quick Access Dropdown */}
+              {isProfileMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 max-h-96 overflow-y-auto z-50">
+                  <div className="px-2 py-2">
+                    <p className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quick Access</p>
+                    {navigationItems.slice(0, 8).map((item) => {
+                      const active = isActive(item.href);
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                            router.push(item.href);
+                            setIsProfileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 mb-1 rounded-lg transition-all duration-200 group text-sm ${
+                            active
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                          title={item.description}
+                        >
+                          <item.icon className={`h-4 w-4 transition-colors ${
+                            active ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                          }`} aria-hidden="true" />
+                          <span className="flex-1 text-left">{item.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative">
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-xs">
+                  {user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || 'U' : 'U'}
+                </span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-200 lg:dark:border-gray-700 lg:bg-white lg:dark:bg-gray-800 lg:shadow-sm">
         {/* Logo */}
@@ -350,46 +457,81 @@ export default function Navigation() {
               >
                 {/* Navigation Items */}
                 <div className="px-2 py-2">
-                  <p className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Navigation</p>
-                  <div onKeyDown={handleNavigationKeyDown}>
-                    {navigationItems.map((item, index) => {
+                    <p className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Navigation</p>
+                    <div onKeyDown={handleNavigationKeyDown}>
+                      {allNavigationItems.map((item, index) => {
                       const active = isActive(item.href);
                       const isFocused = focusedItemIndex === index;
+                      const isPortfolio = item.name === 'Portfolio';
+                      
                       return (
-                        <button
-                          key={item.href}
-                          onClick={() => {
-                            router.push(item.href);
-                            setIsProfileMenuOpen(false);
-                          }}
-                          onKeyDown={(e) => handleKeyDown(e, () => {
-                            router.push(item.href);
-                            setIsProfileMenuOpen(false);
-                          })}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 mb-1 rounded-lg transition-all duration-200 group text-sm ${
-                            active
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-                          } ${
-                            isFocused ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800' : ''
-                          }`}
-                          aria-current={active ? 'page' : undefined}
-                          title={item.description}
-                        >
-                          <item.icon className={`h-4 w-4 transition-colors ${
-                            active ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                          }`} aria-hidden="true" />
-                          <span className="flex-1 text-left">{item.name}</span>
-                          {item.badge && (
-                            <span className={`ml-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full ${
-                              active 
-                                ? 'bg-white/20 text-white' 
-                                : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                            }`} aria-label={`${item.badge} notifications`}>
-                              {item.badge}
-                            </span>
+                        <div key={item.href} className="mb-1">
+                          <button
+                            onClick={() => {
+                              router.push(item.href);
+                              setIsProfileMenuOpen(false);
+                            }}
+                            onKeyDown={(e) => handleKeyDown(e, () => {
+                              router.push(item.href);
+                              setIsProfileMenuOpen(false);
+                            })}
+                            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group text-sm ${
+                              active
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                            } ${
+                              isFocused ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800' : ''
+                            }`}
+                            aria-current={active ? 'page' : undefined}
+                            title={item.description}
+                          >
+                            <item.icon className={`h-4 w-4 transition-colors ${
+                              active ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                            }`} aria-hidden="true" />
+                            <span className="flex-1 text-left">{item.name}</span>
+                            {item.badge && (
+                              <span className={`ml-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold rounded-full ${
+                                active 
+                                  ? 'bg-white/20 text-white' 
+                                  : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                              }`} aria-label={`${item.badge} notifications`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+                          
+                          {/* Quick Action Buttons for Portfolio */}
+                          {isPortfolio && (
+                            <div className="flex space-x-1 mt-1 px-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDepositWithdrawMode('deposit');
+                                  setIsDepositWithdrawModalOpen(true);
+                                  setIsProfileMenuOpen(false);
+                                }}
+                                className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-md hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors"
+                                title="Quick Deposit"
+                              >
+                                <ArrowUpRight className="h-3 w-3" />
+                                <span>Deposit</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDepositWithdrawMode('withdraw');
+                                  setIsDepositWithdrawModalOpen(true);
+                                  setIsProfileMenuOpen(false);
+                                }}
+                                className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors"
+                                title="Quick Withdraw"
+                              >
+                                <ArrowDownLeft className="h-3 w-3" />
+                                <span>Withdraw</span>
+                              </button>
+                            </div>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -473,13 +615,21 @@ export default function Navigation() {
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
             </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label="Open navigation menu"
+              title="Open navigation menu"
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
         </div>
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title">
+            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
             <div className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white dark:bg-gray-800 shadow-xl">
               {/* Mobile Menu Header */}
               <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
@@ -490,9 +640,9 @@ export default function Navigation() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <h2 id="mobile-menu-title" className="text-sm font-medium text-gray-900 dark:text-white">
                       {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User'}
-                    </p>
+                    </h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {user?.email || 'user@example.com'}
                     </p>
@@ -500,15 +650,17 @@ export default function Navigation() {
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-lg"
+                  aria-label="Close navigation menu"
+                  title="Close navigation menu"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
 
               {/* Mobile Navigation Items */}
               <div className="px-4 py-6 space-y-2" onKeyDown={handleNavigationKeyDown} role="navigation" aria-label="Mobile navigation menu">
-                {navigationItems.map((item, index) => {
+                {allNavigationItems.map((item, index) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
                   const isFocused = focusedItemIndex === index;
@@ -610,7 +762,7 @@ export default function Navigation() {
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
         <div className="grid grid-cols-5 h-16">
-          {/* Show only the 5 most important navigation items in bottom bar */}
+          {/* Show only the 5 most important navigation items in bottom bar (filtered) */}
           {navigationItems.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -639,6 +791,13 @@ export default function Navigation() {
           })}
         </div>
       </div>
+
+      {/* Deposit/Withdraw Modal */}
+      <DepositWithdrawModal
+        isOpen={isDepositWithdrawModalOpen}
+        onClose={() => setIsDepositWithdrawModalOpen(false)}
+        mode={depositWithdrawMode}
+      />
     </>
   );
 }

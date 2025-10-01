@@ -32,7 +32,6 @@ import {
   LineChart,
   PieChart,
   TrendingDown,
-  AlertTriangle,
   Bell,
   Settings,
   Download,
@@ -102,7 +101,7 @@ const LandingPage: React.FC = () => {
     {
       icon: <Shield className="w-8 h-8" />,
       title: "Advanced Risk Management",
-      description: "Comprehensive portfolio VaR calculation, correlation monitoring, volatility tracking, and real-time risk alerts to protect your investments.",
+      description: "Comprehensive portfolio VaR calculation, correlation monitoring, volatility tracking, and advanced risk metrics to protect your investments.",
       gradient: "from-red-500 to-orange-500"
     },
     {
@@ -123,12 +122,7 @@ const LandingPage: React.FC = () => {
       description: "Execute trades in milliseconds with our high-frequency trading infrastructure and real-time market data.",
       gradient: "from-yellow-500 to-orange-500"
     },
-    {
-      icon: <AlertTriangle className="w-8 h-8" />,
-      title: "Real-Time Risk Alerts",
-      description: "Intelligent risk monitoring with customizable alerts for volatility spikes, correlation changes, and portfolio exposure limits.",
-      gradient: "from-indigo-500 to-purple-500"
-    },
+
     {
       icon: <BarChart3 className="w-8 h-8" />,
       title: "Advanced Analytics",
