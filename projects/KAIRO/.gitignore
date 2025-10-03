@@ -1,1 +1,14 @@
 .vercel
+
+# Node/Next build artifacts
+node_modules/
+.next/
+out/
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Backups and run artifacts
+backups/
+postman_run.json
